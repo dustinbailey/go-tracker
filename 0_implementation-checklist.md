@@ -7,7 +7,7 @@ This checklist outlines the step-by-step tasks for implementing the Go Tracker w
 
 ## 1. Frontend (Cloudflare Pages)
 
-- [ ] Create a new project using React (or another preferred framework)
+- [ ] Create a new project using Next.js (or another preferred framework)
 - [ ] Style the app using Tailwind CSS for responsive, mobile-first design
 - [ ] Deploy via Cloudflare Pages with GitHub integration for auto-deploys
 
