@@ -108,3 +108,39 @@ If you need to modify the database schema:
 To change when email reminders are sent:
 1. Edit the `crons` array in `cloudflare-worker/wrangler.toml`
 2. Redeploy the worker with `wrangler deploy`
+
+## Importing Existing Data
+
+The application supports importing data from a CSV file. The CSV file should have the following columns:
+
+- Timestamp: Date and time in format "YYYY-MM-DD H:MMam/pm"
+- Type: Bristol stool scale type (e.g., "4: Smooth & soft sausage")
+- Speed: "Fast" or "Slow"
+- Amount: "Little", "Normal", or "Monstrous"
+- Notes: Optional notes
+- Location: "Home", "Hotel", or "Other"
+- Duration From Last (Hours): Time since previous entry in hours
+- Day of Week: 0-6 (0 = Sunday, 6 = Saturday)
+- Hour of Day: 0-23 (24-hour format)
+
+### Running the Import
+
+1. Ensure your `.env.local` file is configured with your Supabase credentials.
+2. Place your CSV file named `existingdata.csv` in the root directory.
+3. Install the required dependencies:
+   ```
+   npm install
+   ```
+4. Run the import script:
+   ```
+   npm run import-data
+   ```
+
+The import script will process the CSV file and import the data into your Supabase database in batches.
+
+### Data Visualization
+
+After importing data, you can view various visualizations in the dashboard, including:
+- Distribution by type, location, speed, and amount
+- Frequency by day of week and hour of day
+- Summary statistics like average time between movements

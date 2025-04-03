@@ -49,7 +49,7 @@ export default function Dashboard() {
     
     try {
       let query = supabase
-        .from('bowel_movements')
+        .from('gos')
         .select('*')
         .gte('timestamp', `${dateRange.startDate}T00:00:00`)
         .lte('timestamp', `${dateRange.endDate}T23:59:59`)
@@ -146,14 +146,55 @@ export default function Dashboard() {
     };
   };
 
-  // Day of week frequency chart data
-  const getDayOfWeekData = () => {
+  // Calculate summary statistics
+  const getSummaryStats = () => {
+    if (movements.length === 0) return { total: 0, avgBetween: 'N/A' };
+    
+    // Total count
+    const total = movements.length;
+    
+    // Average time between movements (using the duration_from_last_hours field if available)
+    let avgDuration = 'N/A';
+    const durationsWithValues = movements.filter(m => m.duration_from_last_hours !== null && m.duration_from_last_hours !== undefined);
+    
+    if (durationsWithValues.length > 0) {
+      const sum = durationsWithValues.reduce((acc, curr) => acc + (curr.duration_from_last_hours || 0), 0);
+      avgDuration = `${(sum / durationsWithValues.length).toFixed(1)} hours`;
+    } else {
+      // Calculate manually from timestamps if durations not available
+      const sortedMovements = [...movements].sort((a, b) => 
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+      
+      if (sortedMovements.length > 1) {
+        let totalHours = 0;
+        for (let i = 1; i < sortedMovements.length; i++) {
+          const prev = new Date(sortedMovements[i-1].timestamp).getTime();
+          const curr = new Date(sortedMovements[i].timestamp).getTime();
+          totalHours += (curr - prev) / (1000 * 60 * 60);
+        }
+        avgDuration = `${(totalHours / (sortedMovements.length - 1)).toFixed(1)} hours`;
+      }
+    }
+    
+    return { total, avgBetween: avgDuration };
+  };
+
+  const stats = getSummaryStats();
+
+  // Add this new function to use the day_of_week field if available
+  const getDayOfWeekDataOptimized = () => {
     const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const counts = Array(7).fill(0);
     
+    // Use the day_of_week field if available, otherwise calculate from timestamp
     movements.forEach(movement => {
-      const date = new Date(movement.timestamp);
-      counts[date.getDay()]++;
+      if (movement.day_of_week !== undefined && movement.day_of_week !== null) {
+        counts[movement.day_of_week]++;
+      } else {
+        const date = new Date(movement.timestamp);
+        counts[date.getDay()]++;
+      }
     });
     
     return {
@@ -167,15 +208,20 @@ export default function Dashboard() {
       }]
     };
   };
-
-  // Hour of day frequency chart data
-  const getHourOfDayData = () => {
+  
+  // Add this new function to use the hour_of_day field if available
+  const getHourOfDayDataOptimized = () => {
     const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
     const counts = Array(24).fill(0);
     
+    // Use the hour_of_day field if available, otherwise calculate from timestamp
     movements.forEach(movement => {
-      const date = new Date(movement.timestamp);
-      counts[date.getHours()]++;
+      if (movement.hour_of_day !== undefined && movement.hour_of_day !== null) {
+        counts[movement.hour_of_day]++;
+      } else {
+        const date = new Date(movement.timestamp);
+        counts[date.getHours()]++;
+      }
     });
     
     return {
@@ -189,37 +235,6 @@ export default function Dashboard() {
       }]
     };
   };
-
-  // Calculate summary statistics
-  const getSummaryStats = () => {
-    if (movements.length === 0) return { total: 0, avgBetween: 'N/A' };
-    
-    // Sort by timestamp ascending for gap calculation
-    const sortedMovements = [...movements].sort((a, b) => 
-      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-    );
-    
-    let totalGapHours = 0;
-    for (let i = 1; i < sortedMovements.length; i++) {
-      const prevTime = new Date(sortedMovements[i-1].timestamp).getTime();
-      const currTime = new Date(sortedMovements[i].timestamp).getTime();
-      const gapHours = (currTime - prevTime) / (1000 * 60 * 60);
-      totalGapHours += gapHours;
-    }
-    
-    const avgGapHours = sortedMovements.length > 1 
-      ? totalGapHours / (sortedMovements.length - 1) 
-      : 0;
-    
-    return {
-      total: movements.length,
-      avgBetween: sortedMovements.length > 1 
-        ? `${avgGapHours.toFixed(1)} hours`
-        : 'N/A'
-    };
-  };
-
-  const stats = getSummaryStats();
 
   return (
     <div className="space-y-8">
@@ -415,14 +430,14 @@ export default function Dashboard() {
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-medium mb-4">Frequency by Day of Week</h3>
               <div className="h-64">
-                {movements.length > 0 && <Bar data={getDayOfWeekData()} />}
+                {movements.length > 0 && <Bar data={getDayOfWeekDataOptimized()} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-medium mb-4">Frequency by Hour of Day</h3>
               <div className="h-64">
-                {movements.length > 0 && <Bar data={getHourOfDayData()} />}
+                {movements.length > 0 && <Bar data={getHourOfDayDataOptimized()} />}
               </div>
             </div>
           </div>
@@ -439,12 +454,13 @@ export default function Dashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Speed</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {movements.slice(0, 10).map((movement, index) => (
-                    <tr key={movement.id || index}>
+                    <tr key={movement.id || index} className="border-b">
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         {new Date(movement.timestamp).toLocaleString()}
                       </td>
@@ -452,6 +468,9 @@ export default function Dashboard() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.type}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.speed}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.amount}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.duration_from_last_hours !== undefined && movement.duration_from_last_hours !== null 
+                        ? `${movement.duration_from_last_hours.toFixed(1)} hrs` 
+                        : '-'}</td>
                       <td className="px-6 py-4 text-sm">{movement.notes}</td>
                     </tr>
                   ))}

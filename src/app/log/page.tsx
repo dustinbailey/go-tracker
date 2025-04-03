@@ -14,15 +14,30 @@ export default function LogPage() {
     type: 'Smooth & soft sausage', 
     speed: 'Fast',
     amount: 'Normal',
-    notes: ''
+    notes: '',
+    duration_from_last_hours: undefined,
+    day_of_week: new Date().getDay(),
+    hour_of_day: new Date().getHours()
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
+    
+    if (name === 'timestamp') {
+      // When timestamp changes, also update day_of_week and hour_of_day
+      const date = new Date(value);
+      setFormData({
+        ...formData,
+        [name]: value,
+        day_of_week: date.getDay(),
+        hour_of_day: date.getHours()
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,9 +45,26 @@ export default function LogPage() {
     setLoading(true);
 
     try {
+      // Get the last movement to calculate duration_from_last_hours
+      const { data: lastMovements } = await supabase
+        .from('gos')
+        .select('timestamp')
+        .order('timestamp', { ascending: false })
+        .limit(1);
+      
+      let submitData = { ...formData };
+      
+      // Calculate duration from last if available
+      if (lastMovements && lastMovements.length > 0) {
+        const lastTimestamp = new Date(lastMovements[0].timestamp);
+        const currentTimestamp = new Date(formData.timestamp);
+        const hoursDiff = (currentTimestamp.getTime() - lastTimestamp.getTime()) / (1000 * 60 * 60);
+        submitData.duration_from_last_hours = Math.round(hoursDiff * 100) / 100; // Round to 2 decimal places
+      }
+
       const { error } = await supabase
-        .from('bowel_movements')
-        .insert([formData]);
+        .from('gos')
+        .insert([submitData]);
 
       if (error) throw error;
       
