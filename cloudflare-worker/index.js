@@ -8,9 +8,9 @@
  */
 
 // Configure your Supabase URL and key
-const SUPABASE_URL = 'your-supabase-url-here';
-const SUPABASE_KEY = 'your-supabase-anon-key-here';
-const RECIPIENT_EMAIL = 'your-email@example.com'; // The email to send reminders to
+const SUPABASE_URL = 'https://oknaozjmcjdrwudzpamj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rbmFvemptY2pkcnd1ZHpwYW1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NDc3ODUsImV4cCI6MjA1OTIyMzc4NX0.My4LnCsTr6PpavBvPw_pngPK_k361on0HsDjjVkN3So';
+const RECIPIENT_EMAIL = 'dbailey51@gmail.com'; // The email to send reminders to
 
 // Handler function for scheduled events (cron)
 export default {
