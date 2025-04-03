@@ -2,20 +2,10 @@
 CREATE TABLE IF NOT EXISTS gos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   timestamp TIMESTAMPTZ NOT NULL DEFAULT now(),
-  location TEXT NOT NULL CHECK (location IN ('Home', 'Hotel', 'Other')),
-  type TEXT NOT NULL CHECK (
-    type IN (
-      'Small hard lumps', 
-      'Hard sausage', 
-      'Sausage with cracks', 
-      'Smooth & soft sausage', 
-      'Soft pieces', 
-      'Fluffy pieces', 
-      'Watery'
-    )
-  ),
-  speed TEXT NOT NULL CHECK (speed IN ('Fast', 'Slow')),
-  amount TEXT NOT NULL CHECK (amount IN ('Little', 'Normal', 'Monstrous')),
+  location TEXT NOT NULL,
+  type TEXT NOT NULL,
+  speed TEXT NOT NULL,
+  amount TEXT NOT NULL,
   notes TEXT,
   duration_from_last_hours NUMERIC,
   day_of_week INTEGER CHECK (day_of_week >= 0 AND day_of_week <= 6),
