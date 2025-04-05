@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import supabase from '@/lib/supabase';
 import type { BowelMovement } from '@/lib/types';
@@ -19,6 +19,22 @@ export default function LogPage() {
     day_of_week: new Date().getDay(),
     hour_of_day: new Date().getHours()
   });
+
+  // Initialize datetime with proper local time including timezone
+  useEffect(() => {
+    // Format the current local date time in the format required by datetime-local input
+    const now = new Date();
+    const localISOString = new Date(
+      now.getTime() - (now.getTimezoneOffset() * 60000)
+    ).toISOString().substring(0, 16);
+    
+    setFormData(prev => ({
+      ...prev,
+      timestamp: localISOString,
+      day_of_week: now.getDay(),
+      hour_of_day: now.getHours()
+    }));
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -40,6 +56,14 @@ export default function LogPage() {
     }
   };
 
+  // Handle direct value changes (for tabs and sliders)
+  const handleValueChange = (name: string, value: string) => {
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -54,10 +78,14 @@ export default function LogPage() {
       
       let submitData = { ...formData };
       
+      // Store the full ISO string with timezone info
+      const localDate = new Date(formData.timestamp);
+      submitData.timestamp = localDate.toISOString();
+      
       // Calculate duration from last if available
       if (lastMovements && lastMovements.length > 0) {
         const lastTimestamp = new Date(lastMovements[0].timestamp);
-        const currentTimestamp = new Date(formData.timestamp);
+        const currentTimestamp = localDate;
         const hoursDiff = (currentTimestamp.getTime() - lastTimestamp.getTime()) / (1000 * 60 * 60);
         submitData.duration_from_last_hours = Math.round(hoursDiff * 100) / 100; // Round to 2 decimal places
       }
@@ -78,144 +106,194 @@ export default function LogPage() {
     }
   };
 
+  // Type options with visual representations
+  const typeOptions = [
+    { value: 'Small hard lumps', label: '1', description: 'Small Hard Lumps (constipation)', visual: '💩' },
+    { value: 'Hard sausage', label: '2', description: 'Hard Sausage (mild constipation)', visual: '🍌' },
+    { value: 'Sausage with cracks', label: '3', description: 'Sausage with Cracks on Surface', visual: '🥖' },
+    { value: 'Smooth & soft sausage', label: '4', description: 'Smooth & Soft Sausage', visual: '🌭' },
+    { value: 'Soft pieces', label: '5', description: 'Soft Pieces', visual: '💩' },
+    { value: 'Fluffy pieces', label: '6', description: 'Fluffy Pieces (mild diarrhea)', visual: '☁️' },
+    { value: 'Watery', label: '7', description: 'Watery (diarrhea)', visual: '💦' },
+  ];
+
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Log a Movement</h1>
+      <h1 className="text-2xl font-bold mb-6">New Go</h1>
       
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Date & Time</label>
-            <input
-              type="datetime-local"
-              name="timestamp"
-              value={formData.timestamp}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md"
-              required
-            />
+            <label className="block text-sm font-bold mb-1">Date & Time</label>
+            <div className="relative">
+              <input
+                type="datetime-local"
+                name="timestamp"
+                value={formData.timestamp}
+                onChange={handleChange}
+                className="w-full p-3 border rounded-lg bg-gray-100 text-gray-900 font-medium hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
-            <select
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md"
-              required
+            <label className="block text-sm font-bold mb-1">Location</label>
+            <div className="flex w-full rounded-lg overflow-hidden">
+              <button
+                type="button"
+                onClick={() => handleValueChange('location', 'Home')}
+                className={`relative flex-1 py-4 text-center ${
+                  formData.location === 'Home' 
+                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                Home
+              </button>
+              <button
+                type="button"
+                onClick={() => handleValueChange('location', 'Hotel')}
+                className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+                  formData.location === 'Hotel' 
+                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                Hotel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleValueChange('location', 'Other')}
+                className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+                  formData.location === 'Other' 
+                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                Other
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold mb-1">Type</label>
+          <div className="mb-2 text-center italic text-sm">{typeOptions.find(option => option.value === formData.type)?.description || 'Smooth and soft sausage'}</div>
+          <div className="flex w-full rounded-lg overflow-hidden">
+            {typeOptions.map((option, index) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleValueChange('type', option.value)}
+                className={`relative flex-1 py-4 text-center ${index > 0 ? 'border-l border-gray-300' : ''} ${
+                  formData.type === option.value
+                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white'
+                    : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex justify-between mt-2">
+            {typeOptions.map((option) => (
+              <div key={option.value} className="flex-1 text-center text-2xl">
+                {option.visual}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold mb-1">Speed</label>
+          <div className="flex w-full rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => handleValueChange('speed', 'Slow')}
+              className={`relative flex-1 py-4 text-center ${
+                formData.speed === 'Slow' 
+                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
             >
-              <option value="Home">Home</option>
-              <option value="Hotel">Hotel</option>
-              <option value="Other">Other</option>
-            </select>
+              Slow
+            </button>
+            <button
+              type="button"
+              onClick={() => handleValueChange('speed', 'Fast')}
+              className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+                formData.speed === 'Fast' 
+                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
+            >
+              Fast
+            </button>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Type (Bristol stool chart)</label>
-          <select
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md"
-            required
-          >
-            <option value="Small hard lumps">Small hard lumps (constipation)</option>
-            <option value="Hard sausage">Hard sausage (mild constipation)</option>
-            <option value="Sausage with cracks">Sausage with cracks on surface</option>
-            <option value="Smooth & soft sausage">Smooth & soft sausage</option>
-            <option value="Soft pieces">Soft pieces</option>
-            <option value="Fluffy pieces">Fluffy pieces (mild diarrhea)</option>
-            <option value="Watery">Watery (diarrhea)</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Speed</label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="speed"
-                  value="Fast"
-                  checked={formData.speed === 'Fast'}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Fast
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="speed"
-                  value="Slow"
-                  checked={formData.speed === 'Slow'}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Slow
-              </label>
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Amount</label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="amount"
-                  value="Little"
-                  checked={formData.amount === 'Little'}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Little
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="amount"
-                  value="Normal"
-                  checked={formData.amount === 'Normal'}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Normal
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="amount"
-                  value="Monstrous"
-                  checked={formData.amount === 'Monstrous'}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Monstrous
-              </label>
-            </div>
+          <label className="block text-sm font-bold mb-1">Amount</label>
+          <div className="flex w-full rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onClick={() => handleValueChange('amount', 'Little')}
+              className={`relative flex-1 py-4 text-center ${
+                formData.amount === 'Little' 
+                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
+            >
+              Little
+            </button>
+            <button
+              type="button"
+              onClick={() => handleValueChange('amount', 'Normal')}
+              className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+                formData.amount === 'Normal' 
+                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
+            >
+              Normal
+            </button>
+            <button
+              type="button"
+              onClick={() => handleValueChange('amount', 'Monstrous')}
+              className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+                formData.amount === 'Monstrous' 
+                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+              }`}
+            >
+              Monstrous
+            </button>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Notes (optional)</label>
+          <label className="block text-sm font-bold mb-1">Notes</label>
           <textarea
             name="notes"
             value={formData.notes}
             onChange={handleChange}
-            className="w-full p-2 border rounded-md h-24"
+            className="w-full p-3 border rounded-md h-32"
+            placeholder="e.g. second wave, pungent smell, greenish, clean wipe"
           />
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+          className="w-full py-4 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 transition-colors disabled:bg-blue-400"
         >
-          {loading ? 'Submitting...' : 'Save Movement'}
+          {loading ? 'Submitting...' : 'Save'}
         </button>
       </form>
     </div>
