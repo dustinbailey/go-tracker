@@ -2,7 +2,7 @@ export type BowelMovement = {
   id?: string;
   timestamp: string;
   location: 'Home' | 'Hotel' | 'Other';
-  type: 'Small hard lumps' | 'Hard sausage' | 'Sausage with cracks' | 'Smooth & soft sausage' | 'Soft pieces' | 'Fluffy pieces' | 'Watery';
+  type: string;
   speed: 'Fast' | 'Slow';
   amount: 'Little' | 'Normal' | 'Monstrous';
   notes?: string;

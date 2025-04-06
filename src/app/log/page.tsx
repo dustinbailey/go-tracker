@@ -73,6 +73,17 @@ export default function LogPage() {
       
       let submitData = { ...formData };
       
+      // Format the type to include the number prefix
+      const typeOption = typeOptions.find(option => option.value === formData.type);
+      if (typeOption) {
+        // Format according to requested examples
+        if (formData.type === 'Sausage with cracks') {
+          submitData.type = `${typeOption.label}: Sausage w/ cracks on surface`;
+        } else {
+          submitData.type = `${typeOption.label}: ${formData.type}`;
+        }
+      }
+      
       // Use standard JavaScript Date handling
       const dateObj = new Date(formData.timestamp);
       
