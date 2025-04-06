@@ -8,6 +8,7 @@ import type { BowelMovement } from '@/lib/types';
 export default function LogPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState<BowelMovement>({
     timestamp: new Date().toISOString().substring(0, 16),
     location: 'Home',
@@ -107,8 +108,30 @@ export default function LogPage() {
 
       if (error) throw error;
       
-      alert('Movement logged successfully!');
-      router.push('/dashboard');
+      // Success handling - reset form and show success indicator
+      setSubmitted(true);
+      // Reset form to initial state
+      const now = new Date();
+      const localISOString = new Date(
+        now.getTime() - (now.getTimezoneOffset() * 60000)
+      ).toISOString().substring(0, 16);
+      
+      setFormData({
+        timestamp: localISOString,
+        location: 'Home',
+        type: 'Smooth & soft sausage', 
+        speed: 'Fast',
+        amount: 'Normal',
+        notes: '',
+        duration_from_last_hours: undefined,
+        day_of_week: now.getDay(),
+        hour_of_day: now.getHours()
+      });
+      
+      // Reset success indicator after 2 seconds
+      setTimeout(() => {
+        setSubmitted(false);
+      }, 2000);
     } catch (error) {
       console.error('Error logging movement:', error);
       alert('Failed to log movement. Please try again.');
@@ -302,9 +325,22 @@ export default function LogPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-4 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 transition-colors disabled:bg-blue-400"
+          className={`w-full py-4 ${
+            submitted 
+              ? 'bg-green-500 hover:bg-green-600' 
+              : 'bg-blue-500 hover:bg-blue-600'
+          } text-white rounded-md font-medium transition-colors disabled:bg-blue-400 flex items-center justify-center`}
         >
-          {loading ? 'Submitting...' : 'Save'}
+          {loading ? 'Submitting...' : (
+            submitted ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Saved
+              </>
+            ) : 'Save'
+          )}
         </button>
       </form>
     </div>
