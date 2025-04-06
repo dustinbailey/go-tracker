@@ -45,9 +45,6 @@ export default function RootLayout({
           <main className="flex-grow container mx-auto p-4">
             {children}
           </main>
-          <footer className="bg-gray-100 dark:bg-gray-900 p-4 text-center text-gray-600 dark:text-gray-400">
-            <p>Go Tracker © {new Date().getFullYear()}</p>
-          </footer>
         </div>
       </body>
     </html>
