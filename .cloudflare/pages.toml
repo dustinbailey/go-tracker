@@ -1,5 +1,5 @@
 [build]
-command = "npm install && npm run build"
+command = "npm install --no-audit --no-fund && npm run build"
 output_directory = "out"
 environment = { NODE_VERSION = "20" }
 
