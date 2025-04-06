@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import supabase from '@/lib/supabase';
 import type { BowelMovement } from '@/lib/types';
 
@@ -131,13 +132,13 @@ export default function LogPage() {
 
   // Type options with visual representations
   const typeOptions = [
-    { value: 'Small hard lumps', label: '1', description: 'Small Hard Lumps (constipation)', visual: '💩' },
-    { value: 'Hard sausage', label: '2', description: 'Hard Sausage (mild constipation)', visual: '🍌' },
-    { value: 'Sausage with cracks', label: '3', description: 'Sausage with Cracks on Surface', visual: '🥖' },
-    { value: 'Smooth & soft sausage', label: '4', description: 'Smooth & Soft Sausage', visual: '🌭' },
-    { value: 'Soft pieces', label: '5', description: 'Soft Pieces', visual: '💩' },
-    { value: 'Fluffy pieces', label: '6', description: 'Fluffy Pieces (mild diarrhea)', visual: '☁️' },
-    { value: 'Watery', label: '7', description: 'Watery (diarrhea)', visual: '💦' },
+    { value: 'Small hard lumps', label: '1', description: 'Small Hard Lumps (constipation)', imagePath: '/images/types/type1.png' },
+    { value: 'Hard sausage', label: '2', description: 'Hard Sausage (mild constipation)', imagePath: '/images/types/type2.png' },
+    { value: 'Sausage with cracks', label: '3', description: 'Sausage with Cracks on Surface', imagePath: '/images/types/type3.png' },
+    { value: 'Smooth & soft sausage', label: '4', description: 'Smooth & Soft Sausage', imagePath: '/images/types/type4.png' },
+    { value: 'Soft pieces', label: '5', description: 'Soft Pieces', imagePath: '/images/types/type5.png' },
+    { value: 'Fluffy pieces', label: '6', description: 'Fluffy Pieces (mild diarrhea)', imagePath: '/images/types/type6.png' },
+    { value: 'Watery', label: '7', description: 'Watery (diarrhea)', imagePath: '/images/types/type7.png' },
   ];
 
   // Fetch the last record when component mounts
@@ -255,10 +256,16 @@ export default function LogPage() {
               </button>
             ))}
           </div>
-          <div className="flex justify-between mt-1">
+          <div className="flex justify-between mt-3">
             {typeOptions.map((option) => (
-              <div key={option.value} className="flex-1 text-center text-lg">
-                {option.visual}
+              <div key={option.value} className="flex-1 flex justify-center items-center">
+                <Image 
+                  src={option.imagePath} 
+                  alt={option.description}
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
             ))}
           </div>
