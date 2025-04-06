@@ -182,7 +182,7 @@ export default function StatsAndRecords() {
 
   // Calculate summary statistics
   const getSummaryStats = () => {
-    if (movements.length === 0) return { total: 0, avgBetween: 'N/A' };
+    if (movements.length === 0) return { total: 0, avgBetween: 'N/A', hoursSinceLast: 'N/A' };
     
     // Total count
     const total = movements.length;
@@ -211,7 +211,22 @@ export default function StatsAndRecords() {
       }
     }
     
-    return { total, avgBetween: avgDuration };
+    // Calculate hours since the last movement
+    let hoursSinceLast = 'N/A';
+    if (movements.length > 0) {
+      // Find the most recent movement
+      const sortedByRecent = [...movements].sort((a, b) => 
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      
+      const lastMovementTime = new Date(sortedByRecent[0].timestamp).getTime();
+      const currentTime = new Date().getTime();
+      const hoursDiff = (currentTime - lastMovementTime) / (1000 * 60 * 60);
+      
+      hoursSinceLast = `${Math.round(hoursDiff)} hours`;
+    }
+    
+    return { total, avgBetween: avgDuration, hoursSinceLast };
   };
 
   const stats = getSummaryStats();
@@ -446,7 +461,7 @@ export default function StatsAndRecords() {
       {/* Summary Stats */}
       <div className="bg-white p-4 rounded-lg shadow">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Summary</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-blue-50 rounded">
             <p className="text-sm text-gray-700 font-medium">Total Logs</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
@@ -454,6 +469,10 @@ export default function StatsAndRecords() {
           <div className="p-4 bg-green-50 rounded">
             <p className="text-sm text-gray-700 font-medium">Average Time Between</p>
             <p className="text-2xl font-bold text-gray-900">{stats.avgBetween}</p>
+          </div>
+          <div className="p-4 bg-purple-50 rounded">
+            <p className="text-sm text-gray-700 font-medium">Hours Since Last Log</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.hoursSinceLast}</p>
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ export default function LogPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [lastRecordTime, setLastRecordTime] = useState<number | null>(null);
   const [formData, setFormData] = useState<BowelMovement>({
     timestamp: getLocalISOString(),
     location: 'Home',
@@ -113,6 +114,9 @@ export default function LogPage() {
         hour_of_day: new Date().getHours()
       });
       
+      // Reset last record time to 0 after successful submission
+      setLastRecordTime(0);
+      
       // Reset success indicator after 2 seconds
       setTimeout(() => {
         setSubmitted(false);
@@ -136,9 +140,36 @@ export default function LogPage() {
     { value: 'Watery', label: '7', description: 'Watery (diarrhea)', visual: '💦' },
   ];
 
+  // Fetch the last record when component mounts
+  useEffect(() => {
+    const fetchLastRecord = async () => {
+      const { data: lastMovements } = await supabase
+        .from('gos')
+        .select('timestamp')
+        .order('timestamp', { ascending: false })
+        .limit(1);
+      
+      if (lastMovements && lastMovements.length > 0) {
+        const lastTimestamp = new Date(lastMovements[0].timestamp);
+        const currentTime = new Date();
+        const hoursDiff = (currentTime.getTime() - lastTimestamp.getTime()) / (1000 * 60 * 60);
+        setLastRecordTime(Math.round(hoursDiff * 10) / 10); // Round to 1 decimal place
+      }
+    };
+
+    fetchLastRecord();
+  }, []);
+
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-xl font-bold mb-3">🚽 New Go</h1>
+      <div className="flex justify-between items-center mb-3">
+        <h1 className="text-xl font-bold">🚽 New Go</h1>
+        {lastRecordTime !== null && (
+          <p className="text-sm italic text-gray-600">
+            {lastRecordTime} hours since last go
+          </p>
+        )}
+      </div>
       
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
