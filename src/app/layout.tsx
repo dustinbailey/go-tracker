@@ -37,7 +37,7 @@ export default function RootLayout({
               <h1 className="text-2xl font-bold">Go Tracker</h1>
               <nav className="flex gap-4">
                 <Link href="/log" className="hover:underline">New Go</Link>
-                <Link href="/dashboard" className="hover:underline">Dashboard</Link>
+                <Link href="/stats" className="hover:underline">Stats & Records</Link>
               </nav>
             </div>
           </header>
