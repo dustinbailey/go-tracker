@@ -574,7 +574,14 @@ export default function Dashboard() {
                   {movements.slice(0, 10).map((movement, index) => (
                     <tr key={movement.id || index} className="border-b">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
-                        {new Date(movement.timestamp).toLocaleString()}
+                        {new Date(movement.timestamp).toLocaleString(undefined, {
+                          year: 'numeric',
+                          month: 'numeric',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: 'numeric',
+                          hour12: true
+                        })}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.location}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.type}</td>
