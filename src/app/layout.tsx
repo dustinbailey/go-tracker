@@ -36,7 +36,6 @@ export default function RootLayout({
             <div className="container mx-auto flex justify-between items-center">
               <h1 className="text-2xl font-bold">Go Tracker</h1>
               <nav className="flex gap-4">
-                <Link href="/" className="hover:underline">Home</Link>
                 <Link href="/log" className="hover:underline">New Go</Link>
                 <Link href="/dashboard" className="hover:underline">Dashboard</Link>
               </nav>
