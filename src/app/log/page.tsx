@@ -5,12 +5,20 @@ import { useRouter } from 'next/navigation';
 import supabase from '@/lib/supabase';
 import type { BowelMovement } from '@/lib/types';
 
+// Helper function to get local ISO string
+const getLocalISOString = () => {
+  const now = new Date();
+  return new Date(
+    now.getTime() - (now.getTimezoneOffset() * 60000)
+  ).toISOString().substring(0, 16);
+};
+
 export default function LogPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState<BowelMovement>({
-    timestamp: new Date().toISOString().substring(0, 16),
+    timestamp: getLocalISOString(),
     location: 'Home',
     type: 'Smooth & soft sausage', 
     speed: 'Fast',
@@ -20,22 +28,6 @@ export default function LogPage() {
     day_of_week: new Date().getDay(),
     hour_of_day: new Date().getHours()
   });
-
-  // Initialize datetime with proper local time including timezone
-  useEffect(() => {
-    // Format the current local date time in the format required by datetime-local input
-    const now = new Date();
-    const localISOString = new Date(
-      now.getTime() - (now.getTimezoneOffset() * 60000)
-    ).toISOString().substring(0, 16);
-    
-    setFormData(prev => ({
-      ...prev,
-      timestamp: localISOString,
-      day_of_week: now.getDay(),
-      hour_of_day: now.getHours()
-    }));
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -109,21 +101,16 @@ export default function LogPage() {
       // Success handling - reset form and show success indicator
       setSubmitted(true);
       // Reset form to initial state
-      const now = new Date();
-      const localISOString = new Date(
-        now.getTime() - (now.getTimezoneOffset() * 60000)
-      ).toISOString().substring(0, 16);
-      
       setFormData({
-        timestamp: localISOString,
+        timestamp: getLocalISOString(),
         location: 'Home',
         type: 'Smooth & soft sausage', 
         speed: 'Fast',
         amount: 'Normal',
         notes: '',
         duration_from_last_hours: undefined,
-        day_of_week: now.getDay(),
-        hour_of_day: now.getHours()
+        day_of_week: new Date().getDay(),
+        hour_of_day: new Date().getHours()
       });
       
       // Reset success indicator after 2 seconds
