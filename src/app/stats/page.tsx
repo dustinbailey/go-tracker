@@ -565,7 +565,7 @@ export default function StatsAndRecords() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Type</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Speed</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Duration</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Duration From Last</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Notes</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -588,7 +588,7 @@ export default function StatsAndRecords() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.speed}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.amount}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.duration_from_last_hours !== undefined && movement.duration_from_last_hours !== null 
-                        ? `${movement.duration_from_last_hours.toFixed(1)} hrs` 
+                        ? `${Math.round(movement.duration_from_last_hours)} hrs` 
                         : '-'}</td>
                       <td className="px-6 py-4 text-sm text-gray-800">{movement.notes}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
