@@ -138,7 +138,7 @@ export default function LogPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-xl font-bold mb-3">New Go</h1>
+      <h1 className="text-xl font-bold mb-3">🚽 New Go</h1>
       
       <form onSubmit={handleSubmit} className="space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

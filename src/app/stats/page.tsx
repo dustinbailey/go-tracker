@@ -349,7 +349,7 @@ export default function StatsAndRecords() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold">Stats & Records</h1>
+      <h1 className="text-2xl font-bold">📊 Stats & Records</h1>
       
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow">
