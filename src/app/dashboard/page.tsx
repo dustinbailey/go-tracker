@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import supabase from '@/lib/supabase';
 import { BowelMovement } from '@/lib/types';
 import { 
@@ -39,10 +39,44 @@ export default function Dashboard() {
     speed: '',
     amount: ''
   });
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchMovements();
   }, [dateRange, filter]);
+
+  // Add click outside listener to dismiss delete confirmation
+  useEffect(() => {
+    if (deleteConfirm) {
+      const handleClickOutside = (e: MouseEvent) => {
+        const target = e.target as HTMLElement;
+        // If clicked element is not a delete button (doesn't have delete-btn class), dismiss
+        if (!target.closest('.delete-btn')) {
+          setDeleteConfirm(null);
+          // Clear the timeout
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [deleteConfirm]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
 
   const fetchMovements = async () => {
     setLoading(true);
@@ -280,6 +314,39 @@ export default function Dashboard() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    if (deleteConfirm === id) {
+      try {
+        const { error } = await supabase
+          .from('gos')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        // Remove from state
+        setMovements(movements.filter(m => m.id !== id));
+        setDeleteConfirm(null);
+      } catch (error) {
+        console.error('Error deleting record:', error);
+        alert('Failed to delete record. Please try again.');
+      }
+    } else {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      
+      setDeleteConfirm(id);
+      
+      // Auto-dismiss confirmation after 3 seconds
+      timeoutRef.current = setTimeout(() => {
+        setDeleteConfirm(current => current === id ? null : current);
+        timeoutRef.current = null;
+      }, 3000);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -500,6 +567,7 @@ export default function Dashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Duration</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Notes</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -516,6 +584,29 @@ export default function Dashboard() {
                         ? `${movement.duration_from_last_hours.toFixed(1)} hrs` 
                         : '-'}</td>
                       <td className="px-6 py-4 text-sm text-gray-800">{movement.notes}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
+                        {movement.id && (
+                          <button 
+                            onClick={() => handleDelete(movement.id as string)}
+                            className="p-2 rounded-full w-10 h-10 flex items-center justify-center delete-btn"
+                            style={{ 
+                              backgroundColor: deleteConfirm === movement.id ? 'rgba(220, 38, 38, 1)' : 'transparent',
+                              color: deleteConfirm === movement.id ? 'white' : 'rgba(220, 38, 38, 1)'
+                            }}
+                            title={deleteConfirm === movement.id ? "Click again to confirm deletion" : "Delete record"}
+                          >
+                            {deleteConfirm === movement.id ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            )}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
