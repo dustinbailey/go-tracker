@@ -1,0 +1,7 @@
+[build]
+command = "npm install && npm run build"
+output_directory = "out"
+environment = { NODE_VERSION = "20" }
+
+[build.environment]
+NODE_VERSION = "20" 
