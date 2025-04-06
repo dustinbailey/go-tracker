@@ -78,14 +78,25 @@ export default function LogPage() {
       
       let submitData = { ...formData };
       
-      // Store the full ISO string with timezone info
-      const localDate = new Date(formData.timestamp);
-      submitData.timestamp = localDate.toISOString();
+      // Use standard JavaScript Date handling with proper timezone information
+      const dateObj = new Date(formData.timestamp);
+      
+      // Log timezone information for debugging
+      console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
+      console.log('Date from input:', dateObj.toString());
+      console.log('UTC hours:', dateObj.getUTCHours());
+      console.log('Local hours:', dateObj.getHours());
+      console.log('Timezone offset (minutes):', dateObj.getTimezoneOffset());
+      
+      // Use the native JavaScript toISOString method, which creates a UTC-based ISO string
+      submitData.timestamp = dateObj.toISOString();
+      
+      console.log('Final timestamp being sent to Supabase:', submitData.timestamp);
       
       // Calculate duration from last if available
       if (lastMovements && lastMovements.length > 0) {
         const lastTimestamp = new Date(lastMovements[0].timestamp);
-        const currentTimestamp = localDate;
+        const currentTimestamp = dateObj;
         const hoursDiff = (currentTimestamp.getTime() - lastTimestamp.getTime()) / (1000 * 60 * 60);
         submitData.duration_from_last_hours = Math.round(hoursDiff * 100) / 100; // Round to 2 decimal places
       }
