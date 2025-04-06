@@ -82,11 +82,6 @@ export default function LogPage() {
       // Use standard JavaScript Date handling
       const dateObj = new Date(formData.timestamp);
       
-      // Log date information for debugging
-      console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
-      console.log('Date from input:', dateObj.toString());
-      console.log('Local hours:', dateObj.getHours());
-      
       // Format the timestamp as YYYY-MM-DD HH:MM:SS without timezone information
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -96,8 +91,6 @@ export default function LogPage() {
       const seconds = String(dateObj.getSeconds()).padStart(2, '0');
       
       submitData.timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-      
-      console.log('Final timestamp being sent to Supabase:', submitData.timestamp);
       
       // Calculate duration from last if available
       if (lastMovements && lastMovements.length > 0) {
