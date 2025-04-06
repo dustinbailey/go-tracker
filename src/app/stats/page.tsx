@@ -34,13 +34,32 @@ export default function StatsAndRecords() {
     endDate: new Date().toISOString().split('T')[0] // today
   });
   const [filter, setFilter] = useState({
-    location: '',
-    type: '',
-    speed: '',
-    amount: ''
+    location: [] as string[],
+    type: [] as string[],
+    speed: [] as string[],
+    amount: [] as string[]
   });
+  const [pendingFilter, setPendingFilter] = useState({
+    location: [] as string[],
+    type: [] as string[],
+    speed: [] as string[],
+    amount: [] as string[]
+  });
+  const [pendingDateRange, setPendingDateRange] = useState({
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    endDate: new Date().toISOString().split('T')[0]
+  });
+  const [datePreset, setDatePreset] = useState('last-month');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    recordsPerPage: 25
+  });
+
+  useEffect(() => {
+    setPendingFilter(filter);
+  }, []);
 
   useEffect(() => {
     fetchMovements();
@@ -82,23 +101,49 @@ export default function StatsAndRecords() {
     setLoading(true);
     
     try {
-      let query = supabase
+      // Create base query
+      let baseQuery = supabase
         .from('gos')
         .select('*')
         .gte('timestamp', `${dateRange.startDate}T00:00:00`)
         .lte('timestamp', `${dateRange.endDate}T23:59:59`)
         .order('timestamp', { ascending: false });
       
-      if (filter.location) query = query.eq('location', filter.location);
-      if (filter.type) query = query.eq('type', filter.type);
-      if (filter.speed) query = query.eq('speed', filter.speed);
-      if (filter.amount) query = query.eq('amount', filter.amount);
+      // Apply filters - updated to handle arrays of values
+      if (filter.location.length > 0) baseQuery = baseQuery.in('location', filter.location);
+      if (filter.type.length > 0) baseQuery = baseQuery.in('type', filter.type);
+      if (filter.speed.length > 0) baseQuery = baseQuery.in('speed', filter.speed);
+      if (filter.amount.length > 0) baseQuery = baseQuery.in('amount', filter.amount);
       
-      const { data, error } = await query;
+      // Initialize an empty array to hold all results
+      let allData: BowelMovement[] = [];
       
-      if (error) throw error;
+      // Implement pagination to get all results
+      let hasMore = true;
+      let page = 0;
+      const pageSize = 1000; // Supabase's maximum page size
       
-      setMovements(data || []);
+      while (hasMore) {
+        const { data, error } = await baseQuery
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          allData = [...allData, ...data];
+          
+          // Check if we received a full page of results
+          if (data.length < pageSize) {
+            hasMore = false;
+          }
+        } else {
+          hasMore = false;
+        }
+        
+        page++;
+      }
+      
+      setMovements(allData);
     } catch (error) {
       console.error('Error fetching movements:', error);
       alert('Failed to load data. Please try again.');
@@ -108,13 +153,109 @@ export default function StatsAndRecords() {
   };
 
   const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFilter(prev => ({ ...prev, [name]: value }));
+    const { name, options } = e.target;
+    const selectedValues = Array.from(options)
+      .filter(option => option.selected)
+      .map(option => option.value);
+    
+    setPendingFilter(prev => ({ ...prev, [name]: selectedValues }));
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setDateRange(prev => ({ ...prev, [name]: value }));
+    setPendingDateRange(prev => ({ ...prev, [name]: value }));
+    // Reset preset when manually changing dates
+    setDatePreset('custom');
+  };
+
+  const handleDatePresetChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const preset = e.target.value;
+    setDatePreset(preset);
+    
+    const today = new Date();
+    let startDate = new Date();
+    let endDate = new Date();
+    
+    switch(preset) {
+      case 'last-week':
+        // Last 7 days
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 7);
+        break;
+        
+      case 'last-month':
+        // Last 30 days
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 30);
+        break;
+        
+      case 'last-3-months':
+        // Last 90 days
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 90);
+        break;
+        
+      case 'last-6-months':
+        // Last 180 days
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 180);
+        break;
+        
+      case 'last-year':
+        // Last 365 days
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 365);
+        break;
+        
+      case 'year-to-date':
+        // January 1st of current year to today
+        startDate = new Date(today.getFullYear(), 0, 1); // Jan 1 of current year
+        break;
+        
+      case 'prev-year':
+        // Previous calendar year
+        startDate = new Date(today.getFullYear() - 1, 0, 1); // Jan 1 of previous year
+        endDate = new Date(today.getFullYear() - 1, 11, 31); // Dec 31 of previous year
+        break;
+        
+      case 'prev-prev-year':
+        // Calendar year before previous year
+        startDate = new Date(today.getFullYear() - 2, 0, 1); // Jan 1 of 2 years ago
+        endDate = new Date(today.getFullYear() - 2, 11, 31); // Dec 31 of 2 years ago
+        break;
+        
+      case 'all':
+        // Far past to today
+        startDate = new Date(2000, 0, 1); // Jan 1, 2000 as a reasonable "far past"
+        break;
+        
+      case 'custom':
+        // Keep existing pending values
+        return;
+        
+      default:
+        return;
+    }
+    
+    // Format dates to strings
+    const formattedStartDate = startDate.toISOString().split('T')[0];
+    const formattedEndDate = endDate.toISOString().split('T')[0];
+    
+    // Update pending date range
+    setPendingDateRange({
+      startDate: formattedStartDate,
+      endDate: formattedEndDate
+    });
+  };
+
+  const applyFilters = () => {
+    setFilter(pendingFilter);
+    setDateRange(pendingDateRange);
+    // Reset to first page when applying new filters
+    setPagination(prev => ({
+      ...prev,
+      currentPage: 1
+    }));
   };
 
   const exportCSV = () => {
@@ -362,6 +503,71 @@ export default function StatsAndRecords() {
     }
   };
 
+  // Add function to handle pagination changes
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({
+      ...prev,
+      currentPage: newPage
+    }));
+  };
+
+  const handleRecordsPerPageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = parseInt(e.target.value);
+    setPagination({
+      currentPage: 1, // Reset to first page when changing records per page
+      recordsPerPage: value
+    });
+  };
+
+  // Calculate pagination info
+  const paginationInfo = {
+    totalPages: Math.ceil(movements.length / pagination.recordsPerPage),
+    startIndex: (pagination.currentPage - 1) * pagination.recordsPerPage,
+    endIndex: Math.min((pagination.currentPage * pagination.recordsPerPage) - 1, movements.length - 1)
+  };
+
+  // Generate an array of page numbers for pagination controls
+  const getPageNumbers = () => {
+    const totalPages = paginationInfo.totalPages;
+    const currentPage = pagination.currentPage;
+    
+    // For small number of pages, show all
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    
+    // For larger numbers, show current, first, last, and some adjacents with ellipsis
+    const pages = [];
+    
+    // Always include first page
+    pages.push(1);
+    
+    // Handle first part
+    if (currentPage > 3) {
+      pages.push(null); // ellipsis
+    }
+    
+    // Pages around current
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    
+    // Handle last part
+    if (currentPage < totalPages - 2) {
+      pages.push(null); // ellipsis
+    }
+    
+    // Always include last page
+    if (totalPages > 1) {
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
+
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">📊 Stats & Records</h1>
@@ -371,12 +577,33 @@ export default function StatsAndRecords() {
         <h2 className="text-xl font-bold text-gray-800 mb-4">Filters</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Date preset selector */}
+          <div className="lg:col-span-3">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range Preset</label>
+            <select
+              value={datePreset}
+              onChange={handleDatePresetChange}
+              className="w-full p-2 border rounded-md text-gray-800"
+            >
+              <option value="custom">Custom Date Range</option>
+              <option value="last-week">Last Week (7 days)</option>
+              <option value="last-month">Last Month (30 days)</option>
+              <option value="last-3-months">Last 3 Months (90 days)</option>
+              <option value="last-6-months">Last 6 Months (180 days)</option>
+              <option value="last-year">Last Year (365 days)</option>
+              <option value="year-to-date">Year to Date</option>
+              <option value="prev-year">Previous Calendar Year</option>
+              <option value="prev-prev-year">Calendar Year Before Previous</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1">Start Date</label>
             <input
               type="date"
               name="startDate"
-              value={dateRange.startDate}
+              value={pendingDateRange.startDate}
               onChange={handleDateChange}
               className="w-full p-2 border rounded-md text-gray-800"
             />
@@ -387,7 +614,7 @@ export default function StatsAndRecords() {
             <input
               type="date"
               name="endDate"
-              value={dateRange.endDate}
+              value={pendingDateRange.endDate}
               onChange={handleDateChange}
               className="w-full p-2 border rounded-md text-gray-800"
             />
@@ -397,26 +624,29 @@ export default function StatsAndRecords() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
             <select
               name="location"
-              value={filter.location}
+              multiple
+              value={pendingFilter.location}
               onChange={handleFilterChange}
+              size={4}
               className="w-full p-2 border rounded-md text-gray-800"
             >
-              <option value="">All</option>
               <option value="Home">Home</option>
               <option value="Hotel">Hotel</option>
               <option value="Other">Other</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <select
               name="type"
-              value={filter.type}
+              multiple
+              value={pendingFilter.type}
               onChange={handleFilterChange}
+              size={7}
               className="w-full p-2 border rounded-md text-gray-800"
             >
-              <option value="">All</option>
               <option value="Small hard lumps">Small hard lumps</option>
               <option value="Hard sausage">Hard sausage</option>
               <option value="Sausage with cracks">Sausage with cracks</option>
@@ -425,36 +655,65 @@ export default function StatsAndRecords() {
               <option value="Fluffy pieces">Fluffy pieces</option>
               <option value="Watery">Watery</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
             <select
               name="speed"
-              value={filter.speed}
+              multiple
+              value={pendingFilter.speed}
               onChange={handleFilterChange}
+              size={2}
               className="w-full p-2 border rounded-md text-gray-800"
             >
-              <option value="">All</option>
               <option value="Fast">Fast</option>
               <option value="Slow">Slow</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
           </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
             <select
               name="amount"
-              value={filter.amount}
+              multiple
+              value={pendingFilter.amount}
               onChange={handleFilterChange}
+              size={3}
               className="w-full p-2 border rounded-md text-gray-800"
             >
-              <option value="">All</option>
               <option value="Little">Little</option>
               <option value="Normal">Normal</option>
               <option value="Monstrous">Monstrous</option>
             </select>
+            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
           </div>
+        </div>
+        
+        {/* Apply filters button */}
+        <div className="mt-4 flex justify-between">
+          <button 
+            onClick={() => {
+              // Clear all filters
+              setPendingFilter({
+                location: [],
+                type: [],
+                speed: [],
+                amount: []
+              });
+            }}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+          >
+            Clear Filters
+          </button>
+          <button 
+            onClick={applyFilters}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Apply Filters
+          </button>
         </div>
       </div>
       
@@ -475,16 +734,6 @@ export default function StatsAndRecords() {
             <p className="text-2xl font-bold text-gray-900">{stats.hoursSinceLast}</p>
           </div>
         </div>
-      </div>
-      
-      {/* Data Export */}
-      <div className="flex justify-end">
-        <button 
-          onClick={exportCSV}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-        >
-          Export CSV
-        </button>
       </div>
       
       {loading ? (
@@ -574,7 +823,42 @@ export default function StatsAndRecords() {
           
           {/* Recent Movements Table */}
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Logs</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-gray-800">Recent Logs</h3>
+              
+              {/* Export CSV button - moved inside Recent Logs header */}
+              <button 
+                onClick={exportCSV}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                <span>Export CSV</span>
+              </button>
+            </div>
+            
+            {/* Pagination controls - top */}
+            <div className="flex flex-wrap items-center justify-between mb-4">
+              <div className="flex items-center space-x-2 mb-2 sm:mb-0">
+                <span className="text-sm text-gray-700">Show</span>
+                <select
+                  value={pagination.recordsPerPage}
+                  onChange={handleRecordsPerPageChange}
+                  className="border rounded-md px-2 py-1 text-sm text-gray-800"
+                >
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span className="text-sm text-gray-700">records per page</span>
+              </div>
+              
+              <div className="text-sm text-gray-700">
+                Showing {movements.length > 0 ? paginationInfo.startIndex + 1 : 0} to {movements.length > 0 ? paginationInfo.endIndex + 1 : 0} of {movements.length} records
+              </div>
+            </div>
+            
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -590,7 +874,7 @@ export default function StatsAndRecords() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {movements.slice(0, 10).map((movement, index) => (
+                  {movements.slice(paginationInfo.startIndex, paginationInfo.endIndex + 1).map((movement, index) => (
                     <tr key={movement.id || index} className="border-b">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                         {new Date(movement.timestamp).toLocaleString(undefined, {
@@ -638,6 +922,55 @@ export default function StatsAndRecords() {
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination controls - bottom */}
+            {paginationInfo.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className={`px-3 py-1 rounded-md ${
+                    pagination.currentPage === 1 
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Previous
+                </button>
+                
+                <div className="flex space-x-1">
+                  {getPageNumbers().map((page, index) => 
+                    page === null ? (
+                      <span key={`ellipsis-${index}`} className="px-3 py-1">...</span>
+                    ) : (
+                      <button
+                        key={`page-${page}`}
+                        onClick={() => handlePageChange(page as number)}
+                        className={`px-3 py-1 rounded-md ${
+                          pagination.currentPage === page
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+                
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === paginationInfo.totalPages}
+                  className={`px-3 py-1 rounded-md ${
+                    pagination.currentPage === paginationInfo.totalPages 
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
