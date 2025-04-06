@@ -151,10 +151,10 @@ export default function LogPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">New Go</h1>
+      <h1 className="text-xl font-bold mb-3">New Go</h1>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-bold mb-1">Date & Time</label>
             <div className="relative">
@@ -163,11 +163,11 @@ export default function LogPage() {
                 name="timestamp"
                 value={formData.timestamp}
                 onChange={handleChange}
-                className="w-full p-3 border rounded-lg bg-gray-100 text-gray-900 font-medium hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border rounded-lg bg-gray-100 text-gray-900 font-medium hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                 required
               />
               <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
@@ -180,9 +180,9 @@ export default function LogPage() {
               <button
                 type="button"
                 onClick={() => handleValueChange('location', 'Home')}
-                className={`relative flex-1 py-4 text-center ${
+                className={`relative flex-1 py-2 text-center ${
                   formData.location === 'Home' 
-                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-2 border-white' 
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}
               >
@@ -191,9 +191,9 @@ export default function LogPage() {
               <button
                 type="button"
                 onClick={() => handleValueChange('location', 'Hotel')}
-                className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+                className={`relative flex-1 py-2 text-center border-l border-gray-300 ${
                   formData.location === 'Hotel' 
-                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-2 border-white' 
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}
               >
@@ -202,9 +202,9 @@ export default function LogPage() {
               <button
                 type="button"
                 onClick={() => handleValueChange('location', 'Other')}
-                className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+                className={`relative flex-1 py-2 text-center border-l border-gray-300 ${
                   formData.location === 'Other' 
-                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-2 border-white' 
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}
               >
@@ -216,20 +216,20 @@ export default function LogPage() {
 
         <div>
           <label className="block text-sm font-bold mb-1">Type</label>
-          <div className="mb-2 text-center italic text-sm">{typeOptions.find(option => option.value === formData.type)?.description || 'Smooth and soft sausage'}</div>
+          <div className="mb-1 text-center italic text-sm">{typeOptions.find(option => option.value === formData.type)?.description || 'Smooth and soft sausage'}</div>
           <div className="flex w-full rounded-lg overflow-hidden">
             {typeOptions.map((option, index) => (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => handleValueChange('type', option.value)}
-                className={`relative flex-1 py-4 text-center ${index > 0 ? 'border-l border-gray-300' : ''} ${
+                className={`relative flex-1 py-2 text-center ${index > 0 ? 'border-l border-gray-300' : ''} ${
                   formData.type === option.value
                     ? option.label === '1' || option.label === '7'
-                      ? 'bg-red-800 text-white font-bold shadow-inner border-b-4 border-white'
+                      ? 'bg-red-800 text-white font-bold shadow-inner border-b-2 border-white'
                       : option.label === '2' || option.label === '6'
-                        ? 'bg-red-500 text-white font-bold shadow-inner border-b-4 border-white'
-                        : 'bg-green-500 text-white font-bold shadow-inner border-b-4 border-white'
+                        ? 'bg-red-500 text-white font-bold shadow-inner border-b-2 border-white'
+                        : 'bg-green-500 text-white font-bold shadow-inner border-b-2 border-white'
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}
               >
@@ -237,9 +237,9 @@ export default function LogPage() {
               </button>
             ))}
           </div>
-          <div className="flex justify-between mt-2">
+          <div className="flex justify-between mt-1">
             {typeOptions.map((option) => (
-              <div key={option.value} className="flex-1 text-center text-2xl">
+              <div key={option.value} className="flex-1 text-center text-lg">
                 {option.visual}
               </div>
             ))}
@@ -252,9 +252,9 @@ export default function LogPage() {
             <button
               type="button"
               onClick={() => handleValueChange('speed', 'Slow')}
-              className={`relative flex-1 py-4 text-center ${
+              className={`relative flex-1 py-2 text-center ${
                 formData.speed === 'Slow' 
-                  ? 'bg-red-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  ? 'bg-red-500 text-white font-bold shadow-inner border-b-2 border-white' 
                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
             >
@@ -263,9 +263,9 @@ export default function LogPage() {
             <button
               type="button"
               onClick={() => handleValueChange('speed', 'Fast')}
-              className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+              className={`relative flex-1 py-2 text-center border-l border-gray-300 ${
                 formData.speed === 'Fast' 
-                  ? 'bg-green-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  ? 'bg-green-500 text-white font-bold shadow-inner border-b-2 border-white' 
                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
             >
@@ -280,9 +280,9 @@ export default function LogPage() {
             <button
               type="button"
               onClick={() => handleValueChange('amount', 'Little')}
-              className={`relative flex-1 py-4 text-center ${
+              className={`relative flex-1 py-2 text-center ${
                 formData.amount === 'Little' 
-                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-2 border-white' 
                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
             >
@@ -291,9 +291,9 @@ export default function LogPage() {
             <button
               type="button"
               onClick={() => handleValueChange('amount', 'Normal')}
-              className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+              className={`relative flex-1 py-2 text-center border-l border-gray-300 ${
                 formData.amount === 'Normal' 
-                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-2 border-white' 
                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
             >
@@ -302,9 +302,9 @@ export default function LogPage() {
             <button
               type="button"
               onClick={() => handleValueChange('amount', 'Monstrous')}
-              className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
+              className={`relative flex-1 py-2 text-center border-l border-gray-300 ${
                 formData.amount === 'Monstrous' 
-                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-2 border-white' 
                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
             >
@@ -315,11 +315,12 @@ export default function LogPage() {
 
         <div>
           <label className="block text-sm font-bold mb-1">Notes</label>
-          <textarea
+          <input
+            type="text"
             name="notes"
             value={formData.notes}
             onChange={handleChange}
-            className="w-full p-3 border rounded-md h-32"
+            className="w-full p-2 border rounded-md text-base"
             placeholder="e.g. second wave, pungent smell, greenish, clean wipe"
           />
         </div>
@@ -327,7 +328,7 @@ export default function LogPage() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full py-4 ${
+          className={`w-full py-2 ${
             submitted 
               ? 'bg-green-500 hover:bg-green-600' 
               : 'bg-blue-500 hover:bg-blue-600'
@@ -336,7 +337,7 @@ export default function LogPage() {
           {loading ? 'Submitting...' : (
             submitted ? (
               <>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
                 Saved
