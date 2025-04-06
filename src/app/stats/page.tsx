@@ -264,7 +264,7 @@ export default function StatsAndRecords() {
       return;
     }
     
-    const headers = ['timestamp', 'location', 'type', 'speed', 'amount', 'notes'];
+    const headers = ['timestamp', 'location', 'type', 'speed', 'amount', 'duration_from_last_hours', 'notes'];
     const csvContent = [
       headers.join(','),
       ...movements.map(movement => 
