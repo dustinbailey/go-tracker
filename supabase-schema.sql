@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS gos (
   duration_from_last_hours NUMERIC,
   day_of_week INTEGER CHECK (day_of_week >= 0 AND day_of_week <= 6),
   hour_of_day INTEGER CHECK (hour_of_day >= 0 AND hour_of_day <= 23),
-  created_at TIMESTAMP NOT NULL DEFAULT now()
+  created_at TIMESTAMP NOT NULL DEFAULT now() -- Stored in UTC
 );
 
 -- Enable Row Level Security (RLS)
