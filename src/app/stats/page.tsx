@@ -323,8 +323,107 @@ export default function StatsAndRecords() {
     
     // Different color schemes based on field
     let backgroundColor, borderColor;
+    let orderedLabels = Object.keys(counts);
+    let orderedData = Object.values(counts);
     
-    if (field === 'amount') {
+    // For type field, order according to Bristol Stool Scale (1-7)
+    if (field === 'type') {
+      // Define the correct order of stool types
+      const typeOrder = [
+        "Small hard lumps",
+        "1: Small hard lumps",
+        "Hard sausage",
+        "2: Hard sausage",
+        "Sausage with cracks",
+        "3: Sausage with cracks",
+        "3: Sausage w/ cracks on surface",
+        "Smooth & soft sausage",
+        "4: Smooth & soft sausage",
+        "Soft pieces",
+        "5: Soft pieces",
+        "Fluffy pieces",
+        "6: Fluffy pieces",
+        "Watery",
+        "7: Watery"
+      ];
+      
+      // Create standardized labels and data arrays in the correct order
+      const orderedPairs: [string, number][] = [];
+      
+      // Push each type that exists in our data in the correct order
+      typeOrder.forEach(type => {
+        if (counts[type] !== undefined) {
+          orderedPairs.push([type, counts[type]]);
+        }
+      });
+      
+      // Handle any types that might not be in our predefined order
+      Object.entries(counts).forEach(([label, count]) => {
+        if (!typeOrder.includes(label)) {
+          orderedPairs.push([label, count]);
+        }
+      });
+      
+      // Extract ordered labels and data
+      orderedLabels = orderedPairs.map(pair => pair[0]);
+      orderedData = orderedPairs.map(pair => pair[1]);
+      
+      // Custom color scheme for Bristol Stool Scale types
+      // 1-2: red shades, 3-5: green shades, 6-7: red shades
+      const bgColors: string[] = [];
+      const borderColors: string[] = [];
+      
+      orderedLabels.forEach(label => {
+        // Extract the type number if present, or infer from the label text
+        let typeNumber = 0;
+        if (label.includes("1:") || label.includes("Small hard lumps")) {
+          typeNumber = 1;
+        } else if (label.includes("2:") || label.includes("Hard sausage")) {
+          typeNumber = 2;
+        } else if (label.includes("3:") || label.includes("Sausage with cracks") || label.includes("Sausage w/ cracks")) {
+          typeNumber = 3;
+        } else if (label.includes("4:") || label.includes("Smooth & soft sausage")) {
+          typeNumber = 4;
+        } else if (label.includes("5:") || label.includes("Soft pieces")) {
+          typeNumber = 5;
+        } else if (label.includes("6:") || label.includes("Fluffy pieces")) {
+          typeNumber = 6;
+        } else if (label.includes("7:") || label.includes("Watery")) {
+          typeNumber = 7;
+        }
+        
+        // Assign colors based on type number
+        if (typeNumber === 1) {
+          bgColors.push('rgba(220, 38, 38, 0.6)'); // Darker red for Type 1
+          borderColors.push('rgba(220, 38, 38, 1)');
+        } else if (typeNumber === 2) {
+          bgColors.push('rgba(255, 99, 132, 0.6)'); // Lighter red for Type 2
+          borderColors.push('rgba(255, 99, 132, 1)');
+        } else if (typeNumber === 3) {
+          bgColors.push('rgba(12, 161, 94, 0.6)'); // Darker green for Type 3
+          borderColors.push('rgba(12, 161, 94, 1)');
+        } else if (typeNumber === 4) {
+          bgColors.push('rgba(72, 202, 141, 0.6)'); // Medium green for Type 4
+          borderColors.push('rgba(72, 202, 141, 1)');
+        } else if (typeNumber === 5) {
+          bgColors.push('rgba(147, 230, 195, 0.6)'); // Lighter green for Type 5
+          borderColors.push('rgba(147, 230, 195, 1)');
+        } else if (typeNumber === 6) {
+          bgColors.push('rgba(252, 165, 165, 0.6)'); // Light red for Type 6
+          borderColors.push('rgba(252, 165, 165, 1)');
+        } else if (typeNumber === 7) {
+          bgColors.push('rgba(185, 28, 28, 0.6)'); // Darker red for Type 7
+          borderColors.push('rgba(185, 28, 28, 1)');
+        } else {
+          // Default color for anything else
+          bgColors.push('rgba(199, 199, 199, 0.6)');
+          borderColors.push('rgba(199, 199, 199, 1)');
+        }
+      });
+      
+      backgroundColor = bgColors;
+      borderColor = borderColors;
+    } else if (field === 'amount') {
       backgroundColor = [
         'rgba(54, 162, 235, 0.6)', // blue
         'rgba(75, 192, 192, 0.6)', // teal
@@ -348,6 +447,29 @@ export default function StatsAndRecords() {
         'rgba(153, 102, 255, 1)',
         'rgba(90, 94, 189, 1)'
       ];
+    } else if (field === 'speed') {
+      // Custom color scheme for speed with green for Fast and red for Slow
+      const speedLabels = orderedLabels;
+      const fastIndex = speedLabels.findIndex(label => label === 'Fast');
+      const slowIndex = speedLabels.findIndex(label => label === 'Slow');
+      
+      // Create initial arrays with placeholders
+      const bgColors = Array(speedLabels.length).fill('rgba(153, 102, 255, 0.6)'); // Default purple
+      const borderColors = Array(speedLabels.length).fill('rgba(153, 102, 255, 1)');
+      
+      // Set specific colors for Fast and Slow
+      if (fastIndex !== -1) {
+        bgColors[fastIndex] = 'rgba(72, 202, 141, 0.6)'; // Green for Fast
+        borderColors[fastIndex] = 'rgba(72, 202, 141, 1)';
+      }
+      
+      if (slowIndex !== -1) {
+        bgColors[slowIndex] = 'rgba(255, 99, 132, 0.6)'; // Red for Slow (same as Hard sausage in Type)
+        borderColors[slowIndex] = 'rgba(255, 99, 132, 1)';
+      }
+      
+      backgroundColor = bgColors;
+      borderColor = borderColors;
     } else {
       backgroundColor = [
         'rgba(54, 162, 235, 0.6)',
@@ -370,10 +492,10 @@ export default function StatsAndRecords() {
     }
     
     return {
-      labels: Object.keys(counts),
+      labels: orderedLabels,
       datasets: [{
         label: `${field.charAt(0).toUpperCase() + field.slice(1)} Distribution`,
-        data: Object.values(counts),
+        data: orderedData,
         backgroundColor: backgroundColor,
         borderColor: borderColor,
         borderWidth: 1
