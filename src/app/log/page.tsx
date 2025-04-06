@@ -79,18 +79,23 @@ export default function LogPage() {
       
       let submitData = { ...formData };
       
-      // Use standard JavaScript Date handling with proper timezone information
+      // Use standard JavaScript Date handling
       const dateObj = new Date(formData.timestamp);
       
-      // Log timezone information for debugging
+      // Log date information for debugging
       console.log('Browser timezone:', Intl.DateTimeFormat().resolvedOptions().timeZone);
       console.log('Date from input:', dateObj.toString());
-      console.log('UTC hours:', dateObj.getUTCHours());
       console.log('Local hours:', dateObj.getHours());
-      console.log('Timezone offset (minutes):', dateObj.getTimezoneOffset());
       
-      // Use the native JavaScript toISOString method, which creates a UTC-based ISO string
-      submitData.timestamp = dateObj.toISOString();
+      // Format the timestamp as YYYY-MM-DD HH:MM:SS without timezone information
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const hours = String(dateObj.getHours()).padStart(2, '0');
+      const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+      const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+      
+      submitData.timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       
       console.log('Final timestamp being sent to Supabase:', submitData.timestamp);
       
