@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
+import NavigationMenu from "@/app/components/NavigationMenu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,10 +36,7 @@ export default function RootLayout({
           <header className="bg-blue-600 text-white p-4">
             <div className="container mx-auto flex justify-between items-center">
               <h1 className="text-2xl font-bold">💩 Go Tracker</h1>
-              <nav className="flex gap-4">
-                <Link href="/log" className="hover:underline">New Go</Link>
-                <Link href="/stats" className="hover:underline">Stats & Records</Link>
-              </nav>
+              <NavigationMenu />
             </div>
           </header>
           <main className="flex-grow container mx-auto p-4">
