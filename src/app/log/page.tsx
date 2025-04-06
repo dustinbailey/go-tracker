@@ -154,7 +154,7 @@ export default function LogPage() {
         const lastTimestamp = new Date(lastMovements[0].timestamp);
         const currentTime = new Date();
         const hoursDiff = (currentTime.getTime() - lastTimestamp.getTime()) / (1000 * 60 * 60);
-        setLastRecordTime(Math.round(hoursDiff * 10) / 10); // Round to 1 decimal place
+        setLastRecordTime(Math.round(hoursDiff)); // Round to nearest whole number
       }
     };
 
@@ -185,11 +185,6 @@ export default function LogPage() {
                 className="w-full p-2 border rounded-lg bg-gray-100 text-gray-900 font-medium hover:bg-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-base"
                 required
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
             </div>
           </div>
           
@@ -346,7 +341,7 @@ export default function LogPage() {
             value={formData.notes}
             onChange={handleChange}
             className="w-full p-2 border rounded-md text-base"
-            placeholder="e.g. second wave, pungent smell, greenish, clean wipe"
+            placeholder="Enter any notes here"
           />
         </div>
 
@@ -357,7 +352,7 @@ export default function LogPage() {
             submitted 
               ? 'bg-green-500 hover:bg-green-600' 
               : 'bg-blue-500 hover:bg-blue-600'
-          } text-white rounded-md font-medium transition-colors disabled:bg-blue-400 flex items-center justify-center`}
+          } text-white rounded-md font-bold transition-colors disabled:bg-blue-400 flex items-center justify-center`}
         >
           {loading ? 'Submitting...' : (
             submitted ? (
@@ -367,7 +362,14 @@ export default function LogPage() {
                 </svg>
                 Saved
               </>
-            ) : 'Save'
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M0 2C0 0.9 0.9 0 2 0h14l4 4v14a2 2 0 01-2 2H2a2 2 0 01-2-2V2zm5 0v6h10V2H5zm-.5 8a.5.5 0 00-.5.5v3a.5.5 0 00.5.5h11a.5.5 0 00.5-.5v-3a.5.5 0 00-.5-.5h-11z" />
+                </svg>
+                Save
+              </>
+            )
           )}
         </button>
       </form>
