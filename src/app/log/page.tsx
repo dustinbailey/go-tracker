@@ -227,7 +227,11 @@ export default function LogPage() {
                 onClick={() => handleValueChange('type', option.value)}
                 className={`relative flex-1 py-4 text-center ${index > 0 ? 'border-l border-gray-300' : ''} ${
                   formData.type === option.value
-                    ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white'
+                    ? option.label === '1' || option.label === '7'
+                      ? 'bg-red-800 text-white font-bold shadow-inner border-b-4 border-white'
+                      : option.label === '2' || option.label === '6'
+                        ? 'bg-red-500 text-white font-bold shadow-inner border-b-4 border-white'
+                        : 'bg-green-500 text-white font-bold shadow-inner border-b-4 border-white'
                     : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
                 }`}
               >
@@ -252,7 +256,7 @@ export default function LogPage() {
               onClick={() => handleValueChange('speed', 'Slow')}
               className={`relative flex-1 py-4 text-center ${
                 formData.speed === 'Slow' 
-                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  ? 'bg-red-500 text-white font-bold shadow-inner border-b-4 border-white' 
                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
             >
@@ -263,7 +267,7 @@ export default function LogPage() {
               onClick={() => handleValueChange('speed', 'Fast')}
               className={`relative flex-1 py-4 text-center border-l border-gray-300 ${
                 formData.speed === 'Fast' 
-                  ? 'bg-blue-500 text-white font-bold shadow-inner border-b-4 border-white' 
+                  ? 'bg-green-500 text-white font-bold shadow-inner border-b-4 border-white' 
                   : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
               }`}
             >
