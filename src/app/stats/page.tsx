@@ -321,29 +321,61 @@ export default function StatsAndRecords() {
       counts[value] = (counts[value] || 0) + 1;
     });
     
+    // Different color schemes based on field
+    let backgroundColor, borderColor;
+    
+    if (field === 'amount') {
+      backgroundColor = [
+        'rgba(54, 162, 235, 0.6)', // blue
+        'rgba(75, 192, 192, 0.6)', // teal
+        'rgba(72, 202, 141, 0.6)'  // green
+      ];
+      borderColor = [
+        'rgba(54, 162, 235, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(72, 202, 141, 1)'
+      ];
+    } else if (field === 'location') {
+      backgroundColor = [
+        'rgba(102, 126, 234, 0.6)', // indigo
+        'rgba(79, 209, 197, 0.6)',  // teal
+        'rgba(153, 102, 255, 0.6)', // purple
+        'rgba(90, 94, 189, 0.6)'    // blue-purple
+      ];
+      borderColor = [
+        'rgba(102, 126, 234, 1)',
+        'rgba(79, 209, 197, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(90, 94, 189, 1)'
+      ];
+    } else {
+      backgroundColor = [
+        'rgba(54, 162, 235, 0.6)',
+        'rgba(255, 99, 132, 0.6)',
+        'rgba(255, 206, 86, 0.6)',
+        'rgba(75, 192, 192, 0.6)',
+        'rgba(153, 102, 255, 0.6)',
+        'rgba(255, 159, 64, 0.6)',
+        'rgba(199, 199, 199, 0.6)'
+      ];
+      borderColor = [
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 99, 132, 1)', 
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)',
+        'rgba(199, 199, 199, 1)'
+      ];
+    }
+    
     return {
       labels: Object.keys(counts),
       datasets: [{
         label: `${field.charAt(0).toUpperCase() + field.slice(1)} Distribution`,
         data: Object.values(counts),
-        backgroundColor: [
-          'rgba(54, 162, 235, 0.6)',
-          'rgba(255, 99, 132, 0.6)',
-          'rgba(255, 206, 86, 0.6)',
-          'rgba(75, 192, 192, 0.6)',
-          'rgba(153, 102, 255, 0.6)',
-          'rgba(255, 159, 64, 0.6)',
-          'rgba(199, 199, 199, 0.6)'
-        ],
-        borderColor: [
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 99, 132, 1)', 
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 159, 64, 1)',
-          'rgba(199, 199, 199, 1)'
-        ],
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
         borderWidth: 1
       }]
     };
@@ -405,8 +437,8 @@ export default function StatsAndRecords() {
       datasets: [{
         label: 'Frequency by Day of Week',
         data: counts,
-        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(79, 209, 197, 0.6)', // teal
+        borderColor: 'rgba(79, 209, 197, 1)',
         borderWidth: 1
       }]
     };
@@ -432,8 +464,8 @@ export default function StatsAndRecords() {
       datasets: [{
         label: 'Frequency by Hour of Day',
         data: counts,
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-        borderColor: 'rgba(255, 99, 132, 1)',
+        backgroundColor: 'rgba(102, 126, 234, 0.6)', // indigo
+        borderColor: 'rgba(102, 126, 234, 1)',
         borderWidth: 1
       }]
     };
@@ -443,6 +475,7 @@ export default function StatsAndRecords() {
   const chartOptions = {
     plugins: {
       legend: {
+        display: false, // Hide legend for bar charts since titles are already clear
         labels: {
           color: '#1F2937', // text-gray-800 equivalent
           font: {
@@ -466,7 +499,7 @@ export default function StatsAndRecords() {
           }
         },
         grid: {
-          color: '#E5E7EB' // text-gray-200 equivalent
+          display: false // Remove grid lines for cleaner look
         }
       },
       y: {
@@ -480,7 +513,84 @@ export default function StatsAndRecords() {
           color: '#E5E7EB' // text-gray-200 equivalent
         }
       }
-    }
+    },
+    maintainAspectRatio: false,
+    responsive: true,
+    indexAxis: 'y' as const, // Horizontal bar chart for better label display
+    barThickness: 'flex' as const
+  };
+
+  // Options for frequency charts (day/hour) - vertical bars
+  const frequencyChartOptions = {
+    plugins: {
+      legend: {
+        display: false, // Hide legend for bar charts since titles are already clear
+        labels: {
+          color: '#1F2937',
+          font: {
+            weight: 'bold' as const
+          }
+        }
+      },
+      title: {
+        color: '#1F2937',
+        font: {
+          weight: 'bold' as const
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#374151',
+          font: {
+            weight: 'bold' as const
+          }
+        },
+        grid: {
+          display: false
+        }
+      },
+      y: {
+        ticks: {
+          color: '#374151',
+          font: {
+            weight: 'bold' as const
+          }
+        },
+        grid: {
+          color: '#E5E7EB'
+        },
+        beginAtZero: true
+      }
+    },
+    maintainAspectRatio: false,
+    responsive: true,
+    barThickness: 'flex' as const
+  };
+
+  // Separate options for pie charts (without scales)
+  const pieChartOptions = {
+    plugins: {
+      legend: {
+        position: 'right' as const,
+        labels: {
+          color: '#1F2937', // text-gray-800 equivalent
+          font: {
+            weight: 'bold' as const
+          },
+          padding: 20
+        }
+      },
+      title: {
+        color: '#1F2937',
+        font: {
+          weight: 'bold' as const
+        }
+      }
+    },
+    maintainAspectRatio: false,
+    responsive: true
   };
 
   const handleDelete = async (id: string) => {
@@ -765,57 +875,57 @@ export default function StatsAndRecords() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Type Distribution</h3>
-              <div className="h-64">
+              <div className="h-80">
                 {movements.length > 0 && <Bar data={getChartData('type')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Type Distribution</h3>
-              <div className="h-64">
-                {movements.length > 0 && <Pie data={getChartData('type')} options={chartOptions} />}
+              <div className="h-80">
+                {movements.length > 0 && <Pie data={getChartData('type')} options={pieChartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Speed Distribution</h3>
-              <div className="h-64">
+              <div className="h-80">
                 {movements.length > 0 && <Bar data={getChartData('speed')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Speed Distribution</h3>
-              <div className="h-64">
-                {movements.length > 0 && <Pie data={getChartData('speed')} options={chartOptions} />}
+              <div className="h-80">
+                {movements.length > 0 && <Pie data={getChartData('speed')} options={pieChartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Amount Distribution</h3>
-              <div className="h-64">
+              <div className="h-80">
                 {movements.length > 0 && <Bar data={getChartData('amount')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Amount Distribution</h3>
-              <div className="h-64">
-                {movements.length > 0 && <Pie data={getChartData('amount')} options={chartOptions} />}
+              <div className="h-80">
+                {movements.length > 0 && <Pie data={getChartData('amount')} options={pieChartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Location Distribution</h3>
-              <div className="h-64">
+              <div className="h-80">
                 {movements.length > 0 && <Bar data={getChartData('location')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Location Distribution</h3>
-              <div className="h-64">
-                {movements.length > 0 && <Pie data={getChartData('location')} options={chartOptions} />}
+              <div className="h-80">
+                {movements.length > 0 && <Pie data={getChartData('location')} options={pieChartOptions} />}
               </div>
             </div>
           </div>
@@ -824,15 +934,15 @@ export default function StatsAndRecords() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Frequency by Day of Week</h3>
-              <div className="h-64">
-                {movements.length > 0 && <Bar data={getDayOfWeekDataOptimized()} options={chartOptions} />}
+              <div className="h-80">
+                {movements.length > 0 && <Bar data={getDayOfWeekDataOptimized()} options={frequencyChartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
               <h3 className="text-lg font-bold text-gray-800 mb-4">Frequency by Hour of Day</h3>
-              <div className="h-64">
-                {movements.length > 0 && <Bar data={getHourOfDayDataOptimized()} options={chartOptions} />}
+              <div className="h-80">
+                {movements.length > 0 && <Bar data={getHourOfDayDataOptimized()} options={frequencyChartOptions} />}
               </div>
             </div>
           </div>
