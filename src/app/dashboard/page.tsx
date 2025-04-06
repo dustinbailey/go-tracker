@@ -236,44 +236,88 @@ export default function Dashboard() {
     };
   };
 
+  // Chart options with improved text contrast
+  const chartOptions = {
+    plugins: {
+      legend: {
+        labels: {
+          color: '#1F2937', // text-gray-800 equivalent
+          font: {
+            weight: 'bold' as const
+          }
+        }
+      },
+      title: {
+        color: '#1F2937',
+        font: {
+          weight: 'bold' as const
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          color: '#374151', // text-gray-700 equivalent
+          font: {
+            weight: 'bold' as const
+          }
+        },
+        grid: {
+          color: '#E5E7EB' // text-gray-200 equivalent
+        }
+      },
+      y: {
+        ticks: {
+          color: '#374151', // text-gray-700 equivalent
+          font: {
+            weight: 'bold' as const
+          }
+        },
+        grid: {
+          color: '#E5E7EB' // text-gray-200 equivalent
+        }
+      }
+    }
+  };
+
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold">Dashboard</h1>
       
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-lg font-medium mb-4">Filters</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Filters</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm mb-1">Start Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
             <input
               type="date"
               name="startDate"
               value={dateRange.startDate}
               onChange={handleDateChange}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md text-gray-800"
             />
           </div>
           
           <div>
-            <label className="block text-sm mb-1">End Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
             <input
               type="date"
               name="endDate"
               value={dateRange.endDate}
               onChange={handleDateChange}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md text-gray-800"
             />
           </div>
           
           <div>
-            <label className="block text-sm mb-1">Location</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
             <select
               name="location"
               value={filter.location}
               onChange={handleFilterChange}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md text-gray-800"
             >
               <option value="">All</option>
               <option value="Home">Home</option>
@@ -283,12 +327,12 @@ export default function Dashboard() {
           </div>
           
           <div>
-            <label className="block text-sm mb-1">Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
             <select
               name="type"
               value={filter.type}
               onChange={handleFilterChange}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md text-gray-800"
             >
               <option value="">All</option>
               <option value="Small hard lumps">Small hard lumps</option>
@@ -302,12 +346,12 @@ export default function Dashboard() {
           </div>
           
           <div>
-            <label className="block text-sm mb-1">Speed</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
             <select
               name="speed"
               value={filter.speed}
               onChange={handleFilterChange}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md text-gray-800"
             >
               <option value="">All</option>
               <option value="Fast">Fast</option>
@@ -316,12 +360,12 @@ export default function Dashboard() {
           </div>
           
           <div>
-            <label className="block text-sm mb-1">Amount</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
             <select
               name="amount"
               value={filter.amount}
               onChange={handleFilterChange}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border rounded-md text-gray-800"
             >
               <option value="">All</option>
               <option value="Little">Little</option>
@@ -334,15 +378,15 @@ export default function Dashboard() {
       
       {/* Summary Stats */}
       <div className="bg-white p-4 rounded-lg shadow">
-        <h2 className="text-lg font-medium mb-4">Summary</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Summary</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-blue-50 rounded">
-            <p className="text-sm text-gray-500">Total Logs</p>
-            <p className="text-2xl font-bold">{stats.total}</p>
+            <p className="text-sm text-gray-700 font-medium">Total Logs</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
           </div>
           <div className="p-4 bg-green-50 rounded">
-            <p className="text-sm text-gray-500">Average Time Between</p>
-            <p className="text-2xl font-bold">{stats.avgBetween}</p>
+            <p className="text-sm text-gray-700 font-medium">Average Time Between</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.avgBetween}</p>
           </div>
         </div>
       </div>
@@ -362,65 +406,65 @@ export default function Dashboard() {
       ) : movements.length === 0 ? (
         <div className="text-center p-8 bg-gray-50 rounded-lg">
           <p>No data found for the selected filters.</p>
-          <p className="text-sm text-gray-500 mt-2">Try adjusting your filters or log some movements.</p>
+          <p className="text-sm text-gray-700 mt-2">Try adjusting your filters or log some movements.</p>
         </div>
       ) : (
         <div className="space-y-8">
           {/* Distribution Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Type Distribution</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Type Distribution</h3>
               <div className="h-64">
-                {movements.length > 0 && <Bar data={getChartData('type')} />}
+                {movements.length > 0 && <Bar data={getChartData('type')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Type Distribution</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Type Distribution</h3>
               <div className="h-64">
-                {movements.length > 0 && <Pie data={getChartData('type')} />}
+                {movements.length > 0 && <Pie data={getChartData('type')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Speed Distribution</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Speed Distribution</h3>
               <div className="h-64">
-                {movements.length > 0 && <Bar data={getChartData('speed')} />}
+                {movements.length > 0 && <Bar data={getChartData('speed')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Speed Distribution</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Speed Distribution</h3>
               <div className="h-64">
-                {movements.length > 0 && <Pie data={getChartData('speed')} />}
+                {movements.length > 0 && <Pie data={getChartData('speed')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Amount Distribution</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Amount Distribution</h3>
               <div className="h-64">
-                {movements.length > 0 && <Bar data={getChartData('amount')} />}
+                {movements.length > 0 && <Bar data={getChartData('amount')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Amount Distribution</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Amount Distribution</h3>
               <div className="h-64">
-                {movements.length > 0 && <Pie data={getChartData('amount')} />}
+                {movements.length > 0 && <Pie data={getChartData('amount')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Location Distribution</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Location Distribution</h3>
               <div className="h-64">
-                {movements.length > 0 && <Bar data={getChartData('location')} />}
+                {movements.length > 0 && <Bar data={getChartData('location')} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Location Distribution</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Location Distribution</h3>
               <div className="h-64">
-                {movements.length > 0 && <Pie data={getChartData('location')} />}
+                {movements.length > 0 && <Pie data={getChartData('location')} options={chartOptions} />}
               </div>
             </div>
           </div>
@@ -428,50 +472,50 @@ export default function Dashboard() {
           {/* Frequency Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Frequency by Day of Week</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Frequency by Day of Week</h3>
               <div className="h-64">
-                {movements.length > 0 && <Bar data={getDayOfWeekDataOptimized()} />}
+                {movements.length > 0 && <Bar data={getDayOfWeekDataOptimized()} options={chartOptions} />}
               </div>
             </div>
             
             <div className="bg-white p-4 rounded-lg shadow">
-              <h3 className="text-lg font-medium mb-4">Frequency by Hour of Day</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Frequency by Hour of Day</h3>
               <div className="h-64">
-                {movements.length > 0 && <Bar data={getHourOfDayDataOptimized()} />}
+                {movements.length > 0 && <Bar data={getHourOfDayDataOptimized()} options={chartOptions} />}
               </div>
             </div>
           </div>
           
           {/* Recent Movements Table */}
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-lg font-medium mb-4">Recent Logs</h3>
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Recent Logs</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Speed</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Duration</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Time</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Location</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Speed</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Amount</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Duration</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Notes</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {movements.slice(0, 10).map((movement, index) => (
                     <tr key={movement.id || index} className="border-b">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">
                         {new Date(movement.timestamp).toLocaleString()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.location}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.type}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.speed}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.amount}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">{movement.duration_from_last_hours !== undefined && movement.duration_from_last_hours !== null 
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.location}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.type}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.speed}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.amount}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800">{movement.duration_from_last_hours !== undefined && movement.duration_from_last_hours !== null 
                         ? `${movement.duration_from_last_hours.toFixed(1)} hrs` 
                         : '-'}</td>
-                      <td className="px-6 py-4 text-sm">{movement.notes}</td>
+                      <td className="px-6 py-4 text-sm text-gray-800">{movement.notes}</td>
                     </tr>
                   ))}
                 </tbody>
