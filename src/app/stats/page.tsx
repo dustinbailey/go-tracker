@@ -56,6 +56,7 @@ export default function StatsAndRecords() {
     currentPage: 1,
     recordsPerPage: 25
   });
+  const [hoursSinceLastLog, setHoursSinceLastLog] = useState<string>('N/A');
 
   useEffect(() => {
     setPendingFilter(filter);
@@ -63,7 +64,34 @@ export default function StatsAndRecords() {
 
   useEffect(() => {
     fetchMovements();
+    fetchLastMovementTime();
   }, [dateRange, filter]);
+
+  // Add separate function to fetch the most recent movement time
+  const fetchLastMovementTime = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gos')
+        .select('timestamp')
+        .order('timestamp', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        const lastMovementTime = new Date(data[0].timestamp).getTime();
+        const currentTime = new Date().getTime();
+        const hoursDiff = (currentTime - lastMovementTime) / (1000 * 60 * 60);
+        
+        setHoursSinceLastLog(`${Math.round(hoursDiff)} hours`);
+      } else {
+        setHoursSinceLastLog('N/A');
+      }
+    } catch (error) {
+      console.error('Error fetching last movement time:', error);
+      setHoursSinceLastLog('N/A');
+    }
+  };
 
   // Add click outside listener to dismiss delete confirmation
   useEffect(() => {
@@ -323,7 +351,7 @@ export default function StatsAndRecords() {
 
   // Calculate summary statistics
   const getSummaryStats = () => {
-    if (movements.length === 0) return { total: 0, avgBetween: 'N/A', hoursSinceLast: 'N/A' };
+    if (movements.length === 0) return { total: 0, avgBetween: 'N/A' };
     
     // Total count
     const total = movements.length;
@@ -352,22 +380,7 @@ export default function StatsAndRecords() {
       }
     }
     
-    // Calculate hours since the last movement
-    let hoursSinceLast = 'N/A';
-    if (movements.length > 0) {
-      // Find the most recent movement
-      const sortedByRecent = [...movements].sort((a, b) => 
-        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-      
-      const lastMovementTime = new Date(sortedByRecent[0].timestamp).getTime();
-      const currentTime = new Date().getTime();
-      const hoursDiff = (currentTime - lastMovementTime) / (1000 * 60 * 60);
-      
-      hoursSinceLast = `${Math.round(hoursDiff)} hours`;
-    }
-    
-    return { total, avgBetween: avgDuration, hoursSinceLast };
+    return { total, avgBetween: avgDuration };
   };
 
   const stats = getSummaryStats();
@@ -576,10 +589,10 @@ export default function StatsAndRecords() {
       <div className="bg-white p-4 rounded-lg shadow">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Filters</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
           {/* Date preset selector */}
-          <div className="lg:col-span-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date Range Preset</label>
+          <div className="md:col-span-2 lg:col-span-2">
+            <label className="block text-sm font-bold text-gray-700 mb-1">Date Range Preset</label>
             <select
               value={datePreset}
               onChange={handleDatePresetChange}
@@ -610,7 +623,7 @@ export default function StatsAndRecords() {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <label className="block text-sm font-bold text-gray-700 mb-1">End Date</label>
             <input
               type="date"
               name="endDate"
@@ -620,75 +633,78 @@ export default function StatsAndRecords() {
             />
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-            <select
-              name="location"
-              multiple
-              value={pendingFilter.location}
-              onChange={handleFilterChange}
-              size={4}
-              className="w-full p-2 border rounded-md text-gray-800"
-            >
-              <option value="Home">Home</option>
-              <option value="Hotel">Hotel</option>
-              <option value="Other">Other</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+          <div className="md:col-span-2 lg:col-span-2 mb-2">
+            <p className="text-sm text-gray-500 italic">Hold Ctrl/Cmd to select multiple options in the filters below</p>
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-            <select
-              name="type"
-              multiple
-              value={pendingFilter.type}
-              onChange={handleFilterChange}
-              size={7}
-              className="w-full p-2 border rounded-md text-gray-800"
-            >
-              <option value="Small hard lumps">Small hard lumps</option>
-              <option value="Hard sausage">Hard sausage</option>
-              <option value="Sausage with cracks">Sausage with cracks</option>
-              <option value="Smooth & soft sausage">Smooth & soft sausage</option>
-              <option value="Soft pieces">Soft pieces</option>
-              <option value="Fluffy pieces">Fluffy pieces</option>
-              <option value="Watery">Watery</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Speed</label>
-            <select
-              name="speed"
-              multiple
-              value={pendingFilter.speed}
-              onChange={handleFilterChange}
-              size={2}
-              className="w-full p-2 border rounded-md text-gray-800"
-            >
-              <option value="Fast">Fast</option>
-              <option value="Slow">Slow</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-            <select
-              name="amount"
-              multiple
-              value={pendingFilter.amount}
-              onChange={handleFilterChange}
-              size={3}
-              className="w-full p-2 border rounded-md text-gray-800"
-            >
-              <option value="Little">Little</option>
-              <option value="Normal">Normal</option>
-              <option value="Monstrous">Monstrous</option>
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
+          <div className="grid grid-cols-4 gap-4 md:col-span-2 lg:col-span-2">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Location</label>
+              <select
+                name="location"
+                multiple
+                value={pendingFilter.location}
+                onChange={handleFilterChange}
+                size={4}
+                className="w-full p-2 border rounded-md text-gray-800"
+              >
+                <option value="Home">Home</option>
+                <option value="Hotel">Hotel</option>
+                <option value="Other">Other</option>
+                <option value="">(Empty)</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Type</label>
+              <select
+                name="type"
+                multiple
+                value={pendingFilter.type}
+                onChange={handleFilterChange}
+                size={7}
+                className="w-full p-2 border rounded-md text-gray-800"
+              >
+                <option value="Small hard lumps">Small hard lumps</option>
+                <option value="Hard sausage">Hard sausage</option>
+                <option value="Sausage with cracks">Sausage with cracks</option>
+                <option value="Smooth & soft sausage">Smooth & soft sausage</option>
+                <option value="Soft pieces">Soft pieces</option>
+                <option value="Fluffy pieces">Fluffy pieces</option>
+                <option value="Watery">Watery</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Speed</label>
+              <select
+                name="speed"
+                multiple
+                value={pendingFilter.speed}
+                onChange={handleFilterChange}
+                size={2}
+                className="w-full p-2 border rounded-md text-gray-800"
+              >
+                <option value="Fast">Fast</option>
+                <option value="Slow">Slow</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1">Amount</label>
+              <select
+                name="amount"
+                multiple
+                value={pendingFilter.amount}
+                onChange={handleFilterChange}
+                size={3}
+                className="w-full p-2 border rounded-md text-gray-800"
+              >
+                <option value="Little">Little</option>
+                <option value="Normal">Normal</option>
+                <option value="Monstrous">Monstrous</option>
+              </select>
+            </div>
           </div>
         </div>
         
@@ -704,13 +720,13 @@ export default function StatsAndRecords() {
                 amount: []
               });
             }}
-            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+            className="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded hover:bg-gray-300 transition-colors"
           >
             Clear Filters
           </button>
           <button 
             onClick={applyFilters}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 transition-colors"
           >
             Apply Filters
           </button>
@@ -722,16 +738,16 @@ export default function StatsAndRecords() {
         <h2 className="text-xl font-bold text-gray-800 mb-4">Summary</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="p-4 bg-blue-50 rounded">
-            <p className="text-sm text-gray-700 font-medium">Total Logs</p>
+            <p className="text-sm text-gray-700 font-medium">Total Filtered Logs</p>
             <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
           </div>
           <div className="p-4 bg-green-50 rounded">
-            <p className="text-sm text-gray-700 font-medium">Average Time Between</p>
+            <p className="text-sm text-gray-700 font-medium">Average Time Between (Filtered)</p>
             <p className="text-2xl font-bold text-gray-900">{stats.avgBetween}</p>
           </div>
           <div className="p-4 bg-purple-50 rounded">
             <p className="text-sm text-gray-700 font-medium">Hours Since Last Log</p>
-            <p className="text-2xl font-bold text-gray-900">{stats.hoursSinceLast}</p>
+            <p className="text-2xl font-bold text-gray-900">{hoursSinceLastLog}</p>
           </div>
         </div>
       </div>
@@ -829,7 +845,7 @@ export default function StatsAndRecords() {
               {/* Export CSV button - moved inside Recent Logs header */}
               <button 
                 onClick={exportCSV}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-green-600 text-white font-bold rounded hover:bg-green-700 transition-colors flex items-center space-x-2"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -929,7 +945,7 @@ export default function StatsAndRecords() {
                 <button
                   onClick={() => handlePageChange(pagination.currentPage - 1)}
                   disabled={pagination.currentPage === 1}
-                  className={`px-3 py-1 rounded-md ${
+                  className={`px-3 py-1 rounded-md font-bold ${
                     pagination.currentPage === 1 
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -946,7 +962,7 @@ export default function StatsAndRecords() {
                       <button
                         key={`page-${page}`}
                         onClick={() => handlePageChange(page as number)}
-                        className={`px-3 py-1 rounded-md ${
+                        className={`px-3 py-1 rounded-md font-bold ${
                           pagination.currentPage === page
                             ? 'bg-blue-600 text-white'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -961,7 +977,7 @@ export default function StatsAndRecords() {
                 <button
                   onClick={() => handlePageChange(pagination.currentPage + 1)}
                   disabled={pagination.currentPage === paginationInfo.totalPages}
-                  className={`px-3 py-1 rounded-md ${
+                  className={`px-3 py-1 rounded-md font-bold ${
                     pagination.currentPage === paginationInfo.totalPages 
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
