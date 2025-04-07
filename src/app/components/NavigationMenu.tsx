@@ -33,6 +33,12 @@ export default function NavigationMenu() {
         >
           Stats & Records
         </Link>
+        <Link 
+          href="/export" 
+          className="px-4 py-2 text-base rounded-lg bg-blue-700 hover:bg-blue-800 transition-colors duration-200 font-medium shadow-sm text-center"
+        >
+          Export Data
+        </Link>
       </nav>
 
       {/* Mobile menu */}
@@ -52,6 +58,13 @@ export default function NavigationMenu() {
               onClick={() => setMobileMenuOpen(false)}
             >
               Stats & Records
+            </Link>
+            <Link 
+              href="/export" 
+              className="px-3 py-2 text-sm rounded-lg bg-blue-700 hover:bg-blue-800 transition-colors duration-200 font-medium shadow-sm text-center"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Export Data
             </Link>
           </nav>
         </div>
