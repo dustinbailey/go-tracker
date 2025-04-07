@@ -2,6 +2,10 @@ name = "go-tracker-reminder"
 main = "index.js"
 compatibility_date = "2023-09-04"
 
-# Set up daily cron trigger
+# Set up hourly cron trigger
 [triggers]
-crons = ["0 12 * * *"] # Runs at 12:00 PM UTC every day 
+crons = ["0 * * * *"] # Runs at the top of every hour
+
+# Enable logging
+[observability.logs]
+enabled = true 

@@ -60,13 +60,14 @@ This checklist outlines the step-by-step tasks for implementing the Go Tracker w
 
 ### Email Reminder System
 
-- [ ] Create a Worker triggered by cron (every 24 hours)
-- [ ] Query Supabase for entries that haven't been logged in over 48 hours
+- [ ] Create a Worker triggered by cron (once every hour)
+- [ ] Query Supabase for most recent entry
+- [ ] Determine if trigger thresholds have been passed (72 hours, 96 hours, 120 hours, 144 hours)
+- [ ] If next threshold has been passed, send email notification
 - [ ] Send email using MailChannels (via Cloudflare Worker fetch)
   - From address: noreply@gotracker.xyz or similar
   - Subject: "Go Tracker Reminder"
-  - Body: "It’s been over 2 days since your last logged movement."
-- [ ] Optionally: Track last reminder sent to avoid duplicates
+  - Body: "It’s been over (X hours / 24) days since your last go"
 
 ---
 

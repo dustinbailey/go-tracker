@@ -1,19 +1,62 @@
 /**
  * Go Tracker Email Reminder Worker
  * 
- * This Cloudflare Worker checks for users who haven't logged a bowel movement in 48+ hours
- * and sends them an email reminder.
+ * This Cloudflare Worker checks for users who haven't logged a bowel movement in 72+ hours
+ * and triggers a webhook at specific thresholds (72, 96, 120, 144 hours).
  * 
- * It's designed to run on a daily schedule via Cloudflare Workers Cron.
+ * It's designed to run on an hourly schedule via Cloudflare Workers Cron.
+ * 
+ * TESTING INSTRUCTIONS:
+ * ---------------------
+ * To test this worker, you can use the following endpoints:
+ * 
+ * 1. /test-reminder
+ *    This will run the normal reminder check process. It will check the most recent entry 
+ *    in the database and determine if any reminder threshold has been crossed.
+ *    Example: https://go-tracker-reminder.dustin-bailey-personal.workers.dev/test-reminder
+ * 
+ * 2. /force-webhook?hours=X
+ *    This will force the webhook to be triggered with a specific hour threshold.
+ *    Replace X with one of the threshold values (72, 96, 120, or 144).
+ *    Example: https://go-tracker-reminder.dustin-bailey-personal.workers.dev/force-webhook?hours=96
  */
 
-// Configure your Supabase URL and key
-const SUPABASE_URL = 'https://oknaozjmcjdrwudzpamj.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rbmFvemptY2pkcnd1ZHpwYW1qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2NDc3ODUsImV4cCI6MjA1OTIyMzc4NX0.My4LnCsTr6PpavBvPw_pngPK_k361on0HsDjjVkN3So';
-const RECIPIENT_EMAIL = 'dbailey51@gmail.com'; // The email to send reminders to
+// Reminder thresholds in hours
+// const REMINDER_THRESHOLDS = [72, 96, 120, 144]; // Standard thresholds
+const REMINDER_THRESHOLDS = [10, 12, 16, 18]; // Testing thresholds
 
-// Handler function for scheduled events (cron)
+// Handler function for HTTP requests and scheduled events
 export default {
+  // Handle HTTP requests to the worker
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    
+    // TEST ENDPOINT 1: Run the normal reminder check
+    // This simulates what happens when the scheduled task runs
+    // It will check the last database entry and determine if a reminder should be sent
+    if (url.pathname === '/test-reminder') {
+      return await handleScheduled(null, env, ctx);
+    }
+    
+    // TEST ENDPOINT 2: Force a webhook trigger with a specific threshold
+    // This bypasses the database check and directly triggers the webhook
+    // Use the 'hours' query parameter to specify the threshold (default: 72)
+    // Example: /force-webhook?hours=96
+    if (url.pathname === '/force-webhook') {
+      const threshold = parseInt(url.searchParams.get('hours') || '72');
+      await triggerWebhook(threshold, env);
+      return new Response(`Forced webhook triggered for ${threshold} hour threshold`, {
+        headers: { 'Content-Type': 'text/plain' },
+      });
+    }
+    
+    // Default response for other HTTP requests
+    return new Response("Go Tracker Reminder Service", {
+      headers: { 'Content-Type': 'text/plain' },
+    });
+  },
+  
+  // Handle scheduled events (cron)
   async scheduled(event, env, ctx) {
     return await handleScheduled(event, env, ctx);
   },
@@ -24,7 +67,7 @@ async function handleScheduled(event, env, ctx) {
   
   try {
     // Check when the last movement was logged
-    const lastMovementData = await fetchLastMovementDate();
+    const lastMovementData = await fetchLastMovementDate(env);
     
     if (!lastMovementData) {
       console.log("No movement data found");
@@ -37,14 +80,16 @@ async function handleScheduled(event, env, ctx) {
     // Calculate hours since last movement
     const hoursSinceLastMovement = (now.getTime() - lastMovementDate.getTime()) / (1000 * 60 * 60);
     
-    console.log(`Hours since last movement: ${hoursSinceLastMovement}`);
+    console.log(`Hours since last movement: ${hoursSinceLastMovement.toFixed(2)}`);
     
-    // If it's been more than 48 hours, send a reminder
-    if (hoursSinceLastMovement >= 48) {
-      await sendReminderEmail(hoursSinceLastMovement);
-      return new Response("Reminder email sent", { status: 200 });
+    // Check if we've passed any of our reminder thresholds
+    const threshold = findNextThresholdPassed(hoursSinceLastMovement);
+    
+    if (threshold) {
+      await triggerWebhook(threshold, env);
+      return new Response(`Reminder webhook triggered for ${threshold} hour threshold. Hours since last movement: ${hoursSinceLastMovement.toFixed(2)}`, { status: 200 });
     } else {
-      return new Response("No reminder needed", { status: 200 });
+      return new Response(`No reminder threshold reached. Hours since last movement: ${hoursSinceLastMovement.toFixed(2)}`, { status: 200 });
     }
   } catch (error) {
     console.error("Error in scheduled task:", error);
@@ -52,14 +97,32 @@ async function handleScheduled(event, env, ctx) {
   }
 }
 
+// Find the next threshold that has been passed
+function findNextThresholdPassed(hoursSinceLastMovement) {
+  // Sort thresholds to ensure they're in ascending order
+  const sortedThresholds = [...REMINDER_THRESHOLDS].sort((a, b) => a - b);
+  
+  // Find the smallest threshold that is greater than or equal to the hours since last movement
+  for (const threshold of sortedThresholds) {
+    if (hoursSinceLastMovement >= threshold && hoursSinceLastMovement < threshold + 1) {
+      return threshold;
+    }
+  }
+  
+  return null;
+}
+
 // Fetch the date of the most recent bowel movement from Supabase
-async function fetchLastMovementDate() {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/bowel_movements?order=timestamp.desc&limit=1`, {
+async function fetchLastMovementDate(env) {
+  const supabaseUrl = env.SUPABASE_URL;
+  const supabaseKey = env.SUPABASE_KEY;
+  
+  const response = await fetch(`${supabaseUrl}/rest/v1/gos?order=timestamp.desc&limit=1`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`
+      'apikey': supabaseKey,
+      'Authorization': `Bearer ${supabaseKey}`
     }
   });
   
@@ -71,47 +134,24 @@ async function fetchLastMovementDate() {
   return data[0] || null;
 }
 
-// Send an email reminder using Cloudflare Workers MailChannels integration
-async function sendReminderEmail(hoursSinceLastMovement) {
-  const days = Math.floor(hoursSinceLastMovement / 24);
-  const hours = Math.floor(hoursSinceLastMovement % 24);
-  const timeString = days > 0 ? `${days} days and ${hours} hours` : `${hours} hours`;
+// Trigger webhook with just the hour threshold
+async function triggerWebhook(hoursThreshold, env) {
+  const webhookUrl = env.WEBHOOK_URL;
   
-  const response = await fetch('https://api.mailchannels.net/tx/v1/send', {
+  const response = await fetch(webhookUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      personalizations: [
-        {
-          to: [{ email: RECIPIENT_EMAIL, name: 'Go Tracker User' }],
-        },
-      ],
-      from: {
-        email: 'noreply@gotracker.xyz',
-        name: 'Go Tracker Reminder',
-      },
-      subject: 'Go Tracker Reminder: Time to log a movement',
-      content: [
-        {
-          type: 'text/plain',
-          value: `It's been ${timeString} since your last logged bowel movement. Remember to log your movements for accurate tracking.`,
-        },
-        {
-          type: 'text/html',
-          value: `<p>It's been <strong>${timeString}</strong> since your last logged bowel movement.</p>
-                 <p>Remember to log your movements for accurate tracking.</p>
-                 <p><a href="https://your-go-tracker-url.com/log">Log a Movement Now</a></p>`,
-        },
-      ],
+      hours: hoursThreshold
     }),
   });
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Email sending failed: ${error}`);
+    throw new Error(`Webhook trigger failed: ${error}`);
   }
   
-  console.log('Reminder email sent successfully');
+  console.log(`Webhook triggered successfully for ${hoursThreshold} hour threshold`);
 } 
