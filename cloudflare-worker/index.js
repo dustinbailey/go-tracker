@@ -23,7 +23,7 @@
 
 // Reminder thresholds in hours
 // const REMINDER_THRESHOLDS = [72, 96, 120, 144]; // Standard thresholds
-const REMINDER_THRESHOLDS = [10, 12, 16, 18]; // Testing thresholds
+const REMINDER_THRESHOLDS = [6, 8, 12, 14]; // Testing thresholds
 
 // Handler function for HTTP requests and scheduled events
 export default {
@@ -78,18 +78,19 @@ async function handleScheduled(event, env, ctx) {
     const now = new Date();
     
     // Calculate hours since last movement
-    const hoursSinceLastMovement = (now.getTime() - lastMovementDate.getTime()) / (1000 * 60 * 60);
+    // Subtract 4 hours to account for Eastern Time timestamps
+    const hoursSinceLastMovement = (now.getTime() - lastMovementDate.getTime()) / (1000 * 60 * 60) - 4;
     
-    console.log(`Hours since last movement: ${hoursSinceLastMovement.toFixed(2)}`);
+    console.log(`Hours since last movement (adjusted for ET): ${hoursSinceLastMovement.toFixed(2)}`);
     
     // Check if we've passed any of our reminder thresholds
     const threshold = findNextThresholdPassed(hoursSinceLastMovement);
     
     if (threshold) {
       await triggerWebhook(threshold, env);
-      return new Response(`Reminder webhook triggered for ${threshold} hour threshold. Hours since last movement: ${hoursSinceLastMovement.toFixed(2)}`, { status: 200 });
+      return new Response(`Reminder webhook triggered for ${threshold} hour threshold. Hours since last movement (ET adjusted): ${hoursSinceLastMovement.toFixed(2)}`, { status: 200 });
     } else {
-      return new Response(`No reminder threshold reached. Hours since last movement: ${hoursSinceLastMovement.toFixed(2)}`, { status: 200 });
+      return new Response(`No reminder threshold reached. Hours since last movement (ET adjusted): ${hoursSinceLastMovement.toFixed(2)}`, { status: 200 });
     }
   } catch (error) {
     console.error("Error in scheduled task:", error);
