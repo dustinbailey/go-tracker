@@ -23,7 +23,7 @@
 
 // Reminder thresholds in hours
 // const REMINDER_THRESHOLDS = [72, 96, 120, 144]; // Standard thresholds
-const REMINDER_THRESHOLDS = [6, 8, 12, 14]; // Testing thresholds
+const REMINDER_THRESHOLDS = [7, 8, 12, 14]; // Testing thresholds
 
 // Handler function for HTTP requests and scheduled events
 export default {
