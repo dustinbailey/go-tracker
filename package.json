@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "NEXT_DISABLE_ESLINT=1 next build",
-    "build:cloudflare": "NEXT_DISABLE_ESLINT=1 npx opennextjs-cloudflare",
+    "build:cloudflare": "NEXT_DISABLE_ESLINT=1 next build && npx opennextjs-cloudflare build",
     "start": "next start",
     "lint": "next lint"
   },
