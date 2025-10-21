@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "NEXT_DISABLE_ESLINT=1 next build",
-    "build:cloudflare": "NEXT_DISABLE_ESLINT=1 next build && npx -y opennextjs-cloudflare build --skipWranglerConfigCheck",
+    "build:cloudflare": "NEXT_DISABLE_ESLINT=1 npx @cloudflare/next-on-pages",
     "start": "next start",
     "lint": "next lint"
   },
@@ -20,8 +20,8 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.5",
     "@eslint/eslintrc": "^3",
-    "@opennextjs/cloudflare": "^1.11.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

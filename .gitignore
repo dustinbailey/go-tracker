@@ -28,6 +28,7 @@ cloudflare-worker/.dev.vars
 
 # vercel
 .vercel
+.open-next
 
 # typescript
 *.tsbuildinfo
