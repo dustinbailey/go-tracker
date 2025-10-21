@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import supabase from '@/lib/supabase';
 import type { BowelMovement } from '@/lib/types';
+import { createMovement, getLastMovement } from '@/app/actions/movements';
 
 // Helper function to get local ISO string
 const getLocalISOString = () => {
@@ -64,13 +65,6 @@ export default function LogPage() {
     setLoading(true);
 
     try {
-      // Get the last movement to calculate duration_from_last_hours
-      const { data: lastMovements } = await supabase
-        .from('gos')
-        .select('timestamp')
-        .order('timestamp', { ascending: false })
-        .limit(1);
-      
       let submitData = { ...formData };
       
       // Format the type to include the number prefix
@@ -97,19 +91,12 @@ export default function LogPage() {
       
       submitData.timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       
-      // Calculate duration from last if available
-      if (lastMovements && lastMovements.length > 0) {
-        const lastTimestamp = new Date(lastMovements[0].timestamp);
-        const currentTimestamp = dateObj;
-        const hoursDiff = (currentTimestamp.getTime() - lastTimestamp.getTime()) / (1000 * 60 * 60);
-        submitData.duration_from_last_hours = Math.round(hoursDiff * 100) / 100; // Round to 2 decimal places
+      // Call server action to create the movement
+      const result = await createMovement(submitData);
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to create movement');
       }
-
-      const { error } = await supabase
-        .from('gos')
-        .insert([submitData]);
-
-      if (error) throw error;
       
       // Success handling - reset form and show success indicator
       setSubmitted(true);
@@ -135,7 +122,8 @@ export default function LogPage() {
       }, 2000);
     } catch (error) {
       console.error('Error logging movement:', error);
-      alert('Failed to log movement. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to log movement: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -155,14 +143,10 @@ export default function LogPage() {
   // Fetch the last record when component mounts
   useEffect(() => {
     const fetchLastRecord = async () => {
-      const { data: lastMovements } = await supabase
-        .from('gos')
-        .select('timestamp')
-        .order('timestamp', { ascending: false })
-        .limit(1);
+      const result = await getLastMovement();
       
-      if (lastMovements && lastMovements.length > 0) {
-        const lastTimestamp = new Date(lastMovements[0].timestamp);
+      if (result.success && result.data) {
+        const lastTimestamp = new Date(result.data.timestamp);
         const currentTime = new Date();
         const hoursDiff = (currentTime.getTime() - lastTimestamp.getTime()) / (1000 * 60 * 60);
         setLastRecordTime(Math.round(hoursDiff)); // Round to nearest whole number

@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // Removed 'output: export' to enable server-side features (middleware, API routes)
+  // This allows Cloudflare Pages Functions to work properly
   images: {
     unoptimized: true,
   },

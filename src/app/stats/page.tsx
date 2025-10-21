@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from '@/lib/supabase';
 import { BowelMovement } from '@/lib/types';
+import { deleteMovement } from '@/app/actions/movements';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -718,19 +719,19 @@ export default function StatsAndRecords() {
   const handleDelete = async (id: string) => {
     if (deleteConfirm === id) {
       try {
-        const { error } = await supabase
-          .from('gos')
-          .delete()
-          .eq('id', id);
+        const result = await deleteMovement(id);
         
-        if (error) throw error;
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to delete record');
+        }
         
         // Remove from state
         setMovements(movements.filter(m => m.id !== id));
         setDeleteConfirm(null);
       } catch (error) {
         console.error('Error deleting record:', error);
-        alert('Failed to delete record. Please try again.');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        alert(`Failed to delete record: ${errorMessage}`);
       }
     } else {
       // Clear any existing timeout
