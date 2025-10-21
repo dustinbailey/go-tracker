@@ -13,6 +13,21 @@ export async function POST(request: Request) {
   try {
     const movement = await request.json();
 
+    // Get the last movement to calculate duration_from_last_hours
+    const { data: lastMovement } = await supabase
+      .from('gos')
+      .select('timestamp')
+      .order('timestamp', { ascending: false })
+      .limit(1);
+
+    // Calculate duration from last movement if it exists
+    if (lastMovement && lastMovement.length > 0) {
+      const lastTimestamp = new Date(lastMovement[0].timestamp);
+      const currentTimestamp = new Date(movement.timestamp);
+      const hoursDiff = (currentTimestamp.getTime() - lastTimestamp.getTime()) / (1000 * 60 * 60);
+      movement.duration_from_last_hours = Math.round(hoursDiff * 100) / 100; // Round to 2 decimal places
+    }
+
     const { error } = await supabase
       .from('gos')
       .insert([movement]);
