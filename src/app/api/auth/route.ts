@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
+export const runtime = 'edge';
+
 // Set your password here or use an environment variable
 const APP_PASSWORD = process.env.APP_PASSWORD || '';
 
