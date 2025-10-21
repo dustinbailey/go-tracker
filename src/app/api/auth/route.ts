@@ -84,23 +84,24 @@ function clearFailedAttempts(ip: string): void {
 }
 
 export async function POST(request: Request) {
-  const clientIP = getClientIP(request);
-  
-  // Check rate limit
-  const rateLimit = checkRateLimit(clientIP);
-  if (!rateLimit.allowed) {
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: `Too many failed attempts. Please try again in ${rateLimit.remainingTime} minute(s).` 
-      }, 
-      { status: 429 }
-    );
-  }
-  
-  const { password } = await request.json();
+  try {
+    const clientIP = getClientIP(request);
+    
+    // Check rate limit
+    const rateLimit = checkRateLimit(clientIP);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Too many failed attempts. Please try again in ${rateLimit.remainingTime} minute(s).` 
+        }, 
+        { status: 429 }
+      );
+    }
+    
+    const { password } = await request.json();
 
-  if (password === APP_PASSWORD && APP_PASSWORD !== '') {
+    if (password === APP_PASSWORD && APP_PASSWORD !== '') {
     // Clear any failed attempts on successful login
     clearFailedAttempts(clientIP);
     
@@ -117,21 +118,31 @@ export async function POST(request: Request) {
     return response;
   }
 
-  // Record failed attempt
-  recordFailedAttempt(clientIP);
-  
-  // Check if this failed attempt has triggered the lockout
-  const newRateLimit = checkRateLimit(clientIP);
-  if (!newRateLimit.allowed) {
+    // Record failed attempt
+    recordFailedAttempt(clientIP);
+    
+    // Check if this failed attempt has triggered the lockout
+    const newRateLimit = checkRateLimit(clientIP);
+    if (!newRateLimit.allowed) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Too many failed attempts. Please try again in ${newRateLimit.remainingTime} minute(s).` 
+        }, 
+        { status: 429 }
+      );
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid password' }, { status: 401 });
+  } catch (error) {
+    console.error('Auth API error:', error);
     return NextResponse.json(
       { 
         success: false, 
-        error: `Too many failed attempts. Please try again in ${newRateLimit.remainingTime} minute(s).` 
+        error: error instanceof Error ? error.message : 'Authentication failed'
       }, 
-      { status: 429 }
+      { status: 500 }
     );
   }
-
-  return NextResponse.json({ success: false, error: 'Invalid password' }, { status: 401 });
 }
 
