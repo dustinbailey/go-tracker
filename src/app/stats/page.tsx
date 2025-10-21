@@ -16,6 +16,9 @@ import {
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
 // Register Chart.js components
 ChartJS.register(
   CategoryScale, 

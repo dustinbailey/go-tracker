@@ -5,6 +5,9 @@ import supabase from '@/lib/supabase';
 import { BowelMovement } from '@/lib/types';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
 export default function ExportPage() {
   const [isLoading, setIsLoading] = useState(false);
   

@@ -7,6 +7,9 @@ import supabase from '@/lib/supabase';
 import type { BowelMovement } from '@/lib/types';
 import { createMovement, getLastMovement } from '@/app/actions/movements';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'edge';
+
 // Helper function to get local ISO string
 const getLocalISOString = () => {
   const now = new Date();
