@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 
 export const runtime = 'edge';
 
@@ -105,16 +104,17 @@ export async function POST(request: Request) {
     // Clear any failed attempts on successful login
     clearFailedAttempts(clientIP);
     
-    // Set a cookie that expires in 60 days
-    const cookieStore = await cookies();
-    cookieStore.set('authenticated', 'true', {
+    // Set a cookie that expires in 1 year
+    const response = NextResponse.json({ success: true });
+    response.cookies.set('authenticated', 'true', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // Always secure on Cloudflare
       sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 60, // 60 days
+      maxAge: 60 * 60 * 24 * 365, // 1 year
+      path: '/',
     });
 
-    return NextResponse.json({ success: true });
+    return response;
   }
 
   // Record failed attempt
