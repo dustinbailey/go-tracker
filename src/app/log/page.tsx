@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import supabase from '@/lib/supabase';
 import type { BowelMovement } from '@/lib/types';
-import { createMovement, getLastMovement } from '@/app/actions/movements';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,8 +91,14 @@ export default function LogPage() {
       
       submitData.timestamp = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       
-      // Call server action to create the movement
-      const result = await createMovement(submitData);
+      // Call API to create the movement
+      const response = await fetch('/api/movements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submitData),
+      });
+
+      const result = await response.json();
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to create movement');
@@ -145,7 +149,8 @@ export default function LogPage() {
   // Fetch the last record when component mounts
   useEffect(() => {
     const fetchLastRecord = async () => {
-      const result = await getLastMovement();
+      const response = await fetch('/api/movements');
+      const result = await response.json();
       
       if (result.success && result.data) {
         const lastTimestamp = new Date(result.data.timestamp);

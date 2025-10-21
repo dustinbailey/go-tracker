@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import supabase from '@/lib/supabase';
 import { BowelMovement } from '@/lib/types';
-import { deleteMovement } from '@/app/actions/movements';
 import { 
   Chart as ChartJS, 
   CategoryScale, 
@@ -721,7 +720,11 @@ export default function StatsAndRecords() {
   const handleDelete = async (id: string) => {
     if (deleteConfirm === id) {
       try {
-        const result = await deleteMovement(id);
+        const response = await fetch(`/api/movements?id=${id}`, {
+          method: 'DELETE',
+        });
+        
+        const result = await response.json();
         
         if (!result.success) {
           throw new Error(result.error || 'Failed to delete record');
